@@ -7,126 +7,135 @@ Radboud University
 authors: Ludo van Alst, Laurens Sluijterman, Daniël Kok
 '''
 
-
-#%% Importing modules
+# %% Importing modules
 import scipy.io
 import numpy as np
 import time
-#get_ipython().run_line_magic('matplotlib', 'notebook') #voor Laurens de jupiter-banaan
+# get_ipython().run_line_magic('matplotlib', 'notebook') #voor Laurens de jupiter-banaan
 import matplotlib.pyplot as plt
 import os
 
 # pick your path
 os.chdir('/home/lvalst/Courses/Machine Learning/week4')
 
-
-#%% Importing data
+# %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
 
-Xtrain=data['mnist']['train_images'][0][0]/255
-Xtest=data['mnist']['test_images'][0][0]/255
-Ttrain=data['mnist']['train_labels'][0][0]
-Ttest=data['mnist']['test_labels'][0][0]
+Xtrain = data['mnist']['train_images'][0][0] / 255
+Xtest = data['mnist']['test_images'][0][0] / 255
+Ttrain = data['mnist']['train_labels'][0][0]
+Ttest = data['mnist']['test_labels'][0][0]
 
 # selecting data, only 3's and 7's needed
-indextrain = [i for i,x in enumerate(Ttrain) if x==3 or x==7]
-indextest =[i for i,x in enumerate(Ttest) if x==3 or x==7]
+indextrain = [i for i, x in enumerate(Ttrain) if x == 3 or x == 7]
+indextest = [i for i, x in enumerate(Ttest) if x == 3 or x == 7]
 
-Xtrain_new= np.zeros((28,28,len(indextrain)))
-Xtest_new= np.zeros((28,28,len(indextest)))
-Ttrain_new =np.zeros(len(indextrain))
-Ttest_new =np.zeros(len(indextest))
+Xtrain_new = np.zeros((28, 28, len(indextrain)))
+Xtest_new = np.zeros((28, 28, len(indextest)))
+Ttrain_new = np.zeros(len(indextrain))
+Ttest_new = np.zeros(len(indextest))
 
 # manipulating data to boolean values instead of 3 or 7
-for i,x in enumerate(indextrain):    
+for i, x in enumerate(indextrain):
     if Ttrain[x] == 3:
         Ttrain_new[i] = 0
     else:
         Ttrain_new[i] = 1
-    Xtrain_new[:,:,i] = Xtrain[:,:,x]
+    Xtrain_new[:, :, i] = Xtrain[:, :, x]
 
-for i,x in enumerate(indextest):  
+for i, x in enumerate(indextest):
     if Ttest[x] == 3:
-        Ttest_new[i] = 0   #The 3's get label 0
+        Ttest_new[i] = 0  # The 3's get label 0
     else:
-        Ttest_new[i] = 1   #The 7's get label 1
-    Xtest_new[:,:,i] = Xtest[:,:,x]
+        Ttest_new[i] = 1  # The 7's get label 1
+    Xtest_new[:, :, i] = Xtest[:, :, x]
 
 # reshaping 28x28 matrices to one long array of 784 entries
 # each row now is a datapoint and each column the dimension
-Xtrain_new=np.transpose(np.reshape(Xtrain_new,(784,len(Ttrain_new))))
-Xtest_new=np.transpose(np.reshape(Xtest_new,(784,len(Ttest_new))))
-Ttrain_new=Ttrain_new.reshape(len(Ttrain_new),1)
-Ttest_new=Ttest_new.reshape(len(Ttest_new),1)
+Xtrain_new = np.transpose(np.reshape(Xtrain_new, (784, len(Ttrain_new))))
+Xtest_new = np.transpose(np.reshape(Xtest_new, (784, len(Ttest_new))))
+Ttrain_new = Ttrain_new.reshape(len(Ttrain_new), 1)
+Ttest_new = Ttest_new.reshape(len(Ttest_new), 1)
 
 
-#%% Defining functions
+# %% Defining functions
 def sigmoid(x):
-    return (1+np.e**(-x))**(-1)
+    return (1 + np.e ** (-x)) ** (-1)
 
-def p(x,w):
+
+def p(x, w):
     return sigmoid(x.dot(w))
 
-def E(w,X,T):
-    Y=p(X,w)
-    N=len(T)
-    return float(-1./N*(np.transpose(T).dot((np.log(Y)))+np.transpose(1-T).dot((np.log(1-Y)))))
 
-def grad(w,X,T): #the derivative of E2 with respect to w_{i}
-    N=len(T)
-    diff=(p(Xtrain_new,w)-Ttrain_new)
-    return np.transpose(1./N*np.transpose(diff).dot(X))
+def E(w, X, T):
+    Y = p(X, w)
+    N = len(T)
+    return float(-1. / N * (
+                np.transpose(T).dot((np.log(Y))) + np.transpose(1 - T).dot(
+            (np.log(1 - Y)))))
 
-def Hessian(w,X,T):
-    Y=p(X,w)
-    N=len(T)
-    return 1./N*(np.transpose(X).dot((((1-Y)*(Y)*X))))
 
-def entropy(Xtrain,Ttrain,Xtest,Ttest,eta,epochs=10000):
+def grad(w, X, T):  # the derivative of E2 with respect to w_{i}
+    N = len(T)
+    diff = (p(Xtrain_new, w) - Ttrain_new)
+    return np.transpose(1. / N * np.transpose(diff).dot(X))
+
+
+def Hessian(w, X, T):
+    Y = p(X, w)
+    N = len(T)
+    return 1. / N * (np.transpose(X).dot((((1 - Y) * (Y) * X))))
+
+
+def entropy(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000):
     # initializing constants
-    w=np.random.uniform(-0.01,0.01,(784,1))
-    Trainloss=np.zeros(epochs)
-    Testloss=np.zeros(epochs)
-    
-    for l in range(0,epochs):
-        if l % int(epochs/4) == 0:
-            print('{0:d}% done with eta={1:4.2f}'.format(int(l/(epochs/4)), eta))
-        dw=-eta*grad(w,Xtrain_new,Ttrain_new)
-        w=w+dw
-        Trainloss[l]=E(w,Xtrain,Ttrain)
-        Testloss[l]=E(w,Xtest,Ttest)
-        
-    return Trainloss,Testloss
+    w = np.random.uniform(-0.01, 0.01, (784, 1))
+    Trainloss = np.zeros(epochs)
+    Testloss = np.zeros(epochs)
+
+    for l in range(0, epochs):
+        if l % int(epochs / 4) == 0:
+            print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),
+                                                         eta))
+        dw = -eta * grad(w, Xtrain_new, Ttrain_new)
+        w = w + dw
+        Trainloss[l] = E(w, Xtrain, Ttrain)
+        Testloss[l] = E(w, Xtest, Ttest)
+
+    return Trainloss, Testloss
 
 
-#%% Grad descent for different etas
+# %% Grad descent for different etas
 # plotting entropy as function of epochs
 epochs = 10000
-values=np.linspace(1,epochs,epochs)
+values = np.linspace(1, epochs, epochs)
 
 eta = 0.3
 time_start = time.clock()
-Trainloss03,Testloss03 = entropy(Xtrain_new,Ttrain_new,Xtest_new,Ttest_new,0.3,epochs)
+Trainloss03, Testloss03 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
+                                  0.3, epochs)
 print('eta=0.3 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values,Trainloss03,label='Etraining03')
-plt.plot(values,Testloss03,label='Etest03')
+plt.plot(values, Trainloss03, label='Etraining03')
+plt.plot(values, Testloss03, label='Etest03')
 # We find that the Testloss had a minimum value around 6500 epochs. Going to 
-#10.000 results in overfitting. Thus for this eta=0.3 we would suggest using 
-#around 6500 epochs. Now we look at what happens when we use different eta
+# 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
+# around 6500 epochs. Now we look at what happens when we use different eta
 
-eta=0.9
+eta = 0.9
 time_start = time.clock()
-Trainloss09,Testloss09 = entropy(Xtrain_new,Ttrain_new,Xtest_new,Ttest_new,0.9,epochs)
+Trainloss09, Testloss09 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
+                                  0.9, epochs)
 print('eta=0.9 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values,Trainloss09,label='Etraining09')
-plt.plot(values,Testloss09,label='Etest09')
+plt.plot(values, Trainloss09, label='Etraining09')
+plt.plot(values, Testloss09, label='Etest09')
 
-eta=0.1
+eta = 0.1
 time_start = time.clock()
-Trainloss01,Testloss01 = entropy(Xtrain_new,Ttrain_new,Xtest_new,Ttest_new,0.1,epochs)
+Trainloss01, Testloss01 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
+                                  0.1, epochs)
 print('eta=0.1 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values,Trainloss01,label='Etraining01')
-plt.plot(values,Testloss01,label='Etest01')
+plt.plot(values, Trainloss01, label='Etraining01')
+plt.plot(values, Testloss01, label='Etest01')
 
 plt.title('Entropy versus epochs for grad descent')
 plt.xlabel('epochs')
@@ -135,17 +144,14 @@ plt.legend()
 plt.savefig('grad_descent.png')
 plt.show()
 
-
-#%% Weigth decay
-
+# %% Weigth decay
 
 
-
-#%% Extras
+# %% Extras
 ## calculate time elapsed for one grad calculation
-#time_start = time.clock()
-#grad(w,Xtrain_new,Ttrain_new) #Testing if it works #Testing if it works
-#print((time.clock() - time_start))
+# time_start = time.clock()
+# grad(w,Xtrain_new,Ttrain_new) #Testing if it works #Testing if it works
+# print((time.clock() - time_start))
 #
 ## find minimum of testloss
-#print(int(np.where(Testloss==min(Testloss))[0]))
+# print(int(np.where(Testloss==min(Testloss))[0]))
