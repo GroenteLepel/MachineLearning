@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import os
 
 # pick your path
-os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/')
 
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
@@ -74,17 +74,32 @@ def E(w, X, T):
                 np.transpose(T).dot((np.log(Y))) + np.transpose(1 - T).dot(
             (np.log(1 - Y)))))
 
+def Edecay(w, X, T):
+    Y = p(X, w)
+    N = len(T)
+    return float(-1. / N * (
+                np.transpose(T).dot((np.log(Y))) + np.transpose(1 - T).dot(
+            (np.log(1 - Y)))))+np.sum(w**2)*1./len(w)
 
 def grad(w, X, T):  # the derivative of E2 with respect to w_{i}
     N = len(T)
     diff = (p(Xtrain_new, w) - Ttrain_new)
     return np.transpose(1. / N * np.transpose(diff).dot(X))
 
+def graddecay(w,X,T,lab):
+    N=len(T)
+    diff = (p(Xtrain_new, w) - Ttrain_new)
+    return np.transpose(1. / N * np.transpose(diff).dot(X))+lab*w/len(w)
 
 def Hessian(w, X, T):
     Y = p(X, w)
     N = len(T)
     return 1. / N * (np.transpose(X).dot((((1 - Y) * (Y) * X))))
+
+def Hessiandecay(w, X, T,lab):
+    Y = p(X, w)
+    N = len(T)
+    return 1. / N * (np.transpose(X).dot((((1 - Y) * (Y) * X))))+np.identity(n)*lab*1./len(w)
 
 
 def entropy(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000):
@@ -104,7 +119,55 @@ def entropy(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000):
 
     return Trainloss, Testloss
 
+def decay(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000): #This function is not correct yet, just a copy of entropy
+    # initializing constants
+    w = np.random.uniform(-0.01, 0.01, (784, 1))
+    Trainloss = np.zeros(epochs)
+    Testloss = np.zeros(epochs)
 
+    for l in range(0, epochs):
+  #      if l % int(epochs / 4) == 0:
+#            print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
+        dw = -eta * grad(w, Xtrain_new, Ttrain_new)
+        w = w + dw
+        Trainloss[l] = E(w, Xtrain, Ttrain)
+        Testloss[l] = E(w, Xtest, Ttest)
+
+    return Trainloss, Testloss
+
+def momentum(Xtrain, Ttrain, Xtest, Ttest, eta,alpha,epochs):
+    # initializing constants
+    dw=0
+    w = np.random.uniform(-0.01, 0.01, (784, 1))
+    Trainloss = np.zeros(epochs)
+    Testloss = np.zeros(epochs)
+
+    for l in range(0, epochs):
+  #      if l % int(epochs / 4) == 0:
+#           print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
+        dw = -eta * grad(w, Xtrain_new, Ttrain_new)+alpha*dw
+        w = w + dw
+        Trainloss[l] = E(w, Xtrain, Ttrain)
+        Testloss[l] = E(w, Xtest, Ttest)
+
+    return Trainloss, Testloss
+
+def weightdecay(Xtrain, Ttrain, Xtest, Ttest, eta,alpha,lab, epochs):
+    # initializing constants
+    dw=0
+    w = np.random.uniform(-0.01, 0.01, (784, 1))
+    Trainloss = np.zeros(epochs)
+    Testloss = np.zeros(epochs)
+
+    for l in range(0, epochs):
+  #      if l % int(epochs / 4) == 0:
+#           print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
+        dw = -eta * graddecay(w, Xtrain_new, Ttrain_new,lab)+alpha*dw
+        w = w + dw
+        Trainloss[l] = E(w, Xtrain, Ttrain)
+        Testloss[l] = E(w, Xtest, Ttest)
+
+    return Trainloss, Testloss
 # %% Grad descent for different etas
 # plotting entropy as function of epochs
 epochs = 10000
@@ -144,7 +207,30 @@ plt.legend()
 plt.savefig('grad_descent.png')
 plt.show()
 
-# %% Weigth decay
+# %% Momentum
+eta = 0.5
+alpha=0.5
+epochs=4000
+values = np.linspace(1, epochs, epochs)
+time_start = time.clock()
+Trainloss04, Testloss04 = momentum(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new, eta,alpha, epochs)
+print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
+plt.plot(values, Trainloss04, label='Etraining04')
+plt.plot(values, Testloss04, label='Etest04')
+
+
+# %% Weight decay
+eta = 0.5
+alpha=0.5
+lab=0.1
+epochs=4000
+values = np.linspace(1, epochs, epochs)
+time_start = time.clock()
+Trainloss05, Testloss05 = weightdecay(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new, eta,alpha,lab, epochs)
+print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
+plt.plot(values, Trainloss04, label='Etraining04')
+plt.plot(values, Testloss04, label='Etest04')
+
 
 
 # %% Extras
