@@ -70,66 +70,64 @@ test_labels = test_labels.reshape(len(test_labels), 1)
 
 # %% Grad descent for different etas
 
-# TODO: write away this data into a text file and plot using a different python
-#  script.
-
-# plotting entropy as function of epochs
+# declaring amount of steps and indicators for all the values.
 n_steps = 400
-# values = np.linspace(1, n_steps, n_steps)
-#
-# eta = 0.3
-# train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                0.3, epochs=n_steps)
-# plt.plot(values, train_loss_03, label='Etraining03')
-# plt.plot(values, test_loss_03, label='Etest03')
-# We find that the Testloss had a minimum value around 6500 epochs. Going to 
+values = np.linspace(1, n_steps, n_steps)
+
+eta = 0.3
+train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, epochs=n_steps)
+# We find that the Testloss had a minimum value around 6500 epochs. Going to
 # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # around 6500 epochs. Now we look at what happens when we use different eta
 
 
-# eta = 0.9
-# train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                eta, epochs=n_steps)
-# plt.plot(values, train_loss_09, label='Etraining09')
-# plt.plot(values, test_loss_09, label='Etest09')
-#
-# eta = 0.1
-# train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                eta, epochs=n_steps)
-# plt.plot(values, train_loss_01, label='Etraining01')
-# plt.plot(values, test_loss_01, label='Etest01')
+eta = 0.9
+train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, epochs=n_steps)
+
+eta = 0.1
+train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, epochs=n_steps)
 
 
+# %% Momentum
+eta = 0.5
+alpha = 0.5
 
-# # %% Momentum
-# eta = 0.5
-# alpha = 0.5
-# # epochs = 400
-# values = np.linspace(1, n_steps, n_steps)
-#
-# train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                eta, momentum_step=alpha,
-#                                                epochs=n_steps)
-#
-# plt.plot(values, train_loss_04, label='Etraining04 (mom)')
-# plt.plot(values, test_loss_04, label='Etest04 (mom)')
+train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, momentum_step=alpha,
+                                               epochs=n_steps)
+
 
 # %% Weight decay
 eta = 0.5
 alpha = 0.5
 lab = 0.1
-# n_steps = 4000
-values = np.linspace(1, n_steps, n_steps)
-
 
 train_loss_05, test_loss_05 = gradient_descent(train_coords, train_labels,
                                                test_coords, test_labels,
                                                eta, momentum_step=alpha,
                                                decay_factor=lab, epochs=n_steps)
+
+
+# TODO: write away this data into a text file and plot using a different python
+#  script.
+plt.plot(values, train_loss_03, label='Etraining03')
+plt.plot(values, test_loss_03, label='Etest03')
+
+plt.plot(values, train_loss_09, label='Etraining09')
+plt.plot(values, test_loss_09, label='Etest09')
+
+plt.plot(values, train_loss_01, label='Etraining01')
+plt.plot(values, test_loss_01, label='Etest01')
+
+plt.plot(values, train_loss_04, label='Etraining04 (mom)')
+plt.plot(values, test_loss_04, label='Etest04 (mom)')
 
 plt.plot(values, train_loss_05, label='Etraining05 (mom, weighted)')
 plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
