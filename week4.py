@@ -132,6 +132,9 @@ plt.plot(values, test_loss_04, label='Etest04 (mom)')
 plt.plot(values, train_loss_05, label='Etraining05 (mom, weighted)')
 plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
+plt.yscale('log')
+plt.xscale('log')
+
 plt.title('Entropy versus epochs for grad descent')
 plt.xlabel('epochs')
 plt.ylabel('entropy')
