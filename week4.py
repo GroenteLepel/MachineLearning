@@ -26,21 +26,21 @@ data = scipy.io.loadmat('mnistAll.mat')
 # by 255.
 # T indicates the label of each image, which we cherry-pick only the 3's and 7's
 # and give these a 0 or 1 according to the 3 or 7 later on.
-Xtrain = data['mnist']['train_images'][0][0] / 255
-Xtest = data['mnist']['test_images'][0][0] / 255
-Ttrain = data['mnist']['train_labels'][0][0]
-Ttest = data['mnist']['test_labels'][0][0]
+train_coords_raw = data['mnist']['train_images'][0][0] / 255
+test_coords_raw = data['mnist']['test_images'][0][0] / 255
+train_labels_raw = data['mnist']['train_labels'][0][0]
+test_labels_raw = data['mnist']['test_labels'][0][0]
 
 # Selecting data, only 3's and 7's needed
-indextrain = [i for i, x in enumerate(Ttrain) if x == 3 or x == 7]
-indextest = [i for i, x in enumerate(Ttest) if x == 3 or x == 7]
+indextrain = [i for i, x in enumerate(train_labels_raw) if x == 3 or x == 7]
+indextest = [i for i, x in enumerate(test_labels_raw) if x == 3 or x == 7]
 
 # *train_new indicates the array but with only the 3's and 7s', labeled as
 # 0's and 1's respectively.
-Xtrain_new = np.zeros((28, 28, len(indextrain)))
-Xtest_new = np.zeros((28, 28, len(indextest)))
-Ttrain_new = np.zeros(len(indextrain))
-Ttest_new = np.zeros(len(indextest))
+train_coords = np.zeros((28, 28, len(indextrain)))
+test_coords = np.zeros((28, 28, len(indextest)))
+train_labels = np.zeros(len(indextrain))
+test_labels = np.zeros(len(indextest))
 
 # manipulating data to boolean values instead of 3 or 7
 # TODO: only every label that needs to be 0 can be changed, since Ttrain_new
@@ -48,58 +48,91 @@ Ttest_new = np.zeros(len(indextest))
 # TODO: remove the damned for-loop.
 
 for i, x in enumerate(indextrain):
-    if Ttrain[x] == 3:
-        Ttrain_new[i] = 0
+    if train_labels_raw[x] == 3:
+        train_labels[i] = 0
     else:
-        Ttrain_new[i] = 1
-    Xtrain_new[:, :, i] = Xtrain[:, :, x]
+        train_labels[i] = 1
+    train_coords[:, :, i] = train_coords_raw[:, :, x]
 
 for i, x in enumerate(indextest):
-    if Ttest[x] == 3:
-        Ttest_new[i] = 0  # The 3's get label 0
+    if test_labels_raw[x] == 3:
+        test_labels[i] = 0  # The 3's get label 0
     else:
-        Ttest_new[i] = 1  # The 7's get label 1
-    Xtest_new[:, :, i] = Xtest[:, :, x]
+        test_labels[i] = 1  # The 7's get label 1
+    test_coords[:, :, i] = test_coords_raw[:, :, x]
 
 # reshaping 28x28 matrices to one long array of 784 entries
-# each row now is a datapoint and each column the dimension
-Xtrain_new = np.transpose(np.reshape(Xtrain_new, (784, len(Ttrain_new))))
-Xtest_new = np.transpose(np.reshape(Xtest_new, (784, len(Ttest_new))))
-Ttrain_new = Ttrain_new.reshape(len(Ttrain_new), 1)
-Ttest_new = Ttest_new.reshape(len(Ttest_new), 1)
-
+# each row now is a data point and each column the dimension
+train_coords = np.transpose(np.reshape(train_coords, (784, len(train_labels))))
+test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
+train_labels = train_labels.reshape(len(train_labels), 1)
+test_labels = test_labels.reshape(len(test_labels), 1)
 
 # %% Grad descent for different etas
-# plotting entropy as function of epochs
-epochs = 4000
-values = np.linspace(1, epochs, epochs)
 
-eta = 0.3
-time_start = time.clock()
-Trainloss03, Testloss03 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
-                                  0.3, epochs)
-print('eta=0.3 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values, Trainloss03, label='Etraining03')
-plt.plot(values, Testloss03, label='Etest03')
+# TODO: write away this data into a text file and plot using a different python
+#  script.
+
+# plotting entropy as function of epochs
+n_steps = 400
+# values = np.linspace(1, n_steps, n_steps)
+#
+# eta = 0.3
+# train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                0.3, epochs=n_steps)
+# plt.plot(values, train_loss_03, label='Etraining03')
+# plt.plot(values, test_loss_03, label='Etest03')
 # We find that the Testloss had a minimum value around 6500 epochs. Going to 
 # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # around 6500 epochs. Now we look at what happens when we use different eta
 
-eta = 0.9
-time_start = time.clock()
-Trainloss09, Testloss09 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
-                                  0.9, epochs)
-print('eta=0.9 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values, Trainloss09, label='Etraining09')
-plt.plot(values, Testloss09, label='Etest09')
 
-eta = 0.1
-time_start = time.clock()
-Trainloss01, Testloss01 = entropy(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
-                                  0.1, epochs)
-print('eta=0.1 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values, Trainloss01, label='Etraining01')
-plt.plot(values, Testloss01, label='Etest01')
+# eta = 0.9
+# train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps)
+# plt.plot(values, train_loss_09, label='Etraining09')
+# plt.plot(values, test_loss_09, label='Etest09')
+#
+# eta = 0.1
+# train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps)
+# plt.plot(values, train_loss_01, label='Etraining01')
+# plt.plot(values, test_loss_01, label='Etest01')
+
+
+
+# # %% Momentum
+# eta = 0.5
+# alpha = 0.5
+# # epochs = 400
+# values = np.linspace(1, n_steps, n_steps)
+#
+# train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, momentum_step=alpha,
+#                                                epochs=n_steps)
+#
+# plt.plot(values, train_loss_04, label='Etraining04 (mom)')
+# plt.plot(values, test_loss_04, label='Etest04 (mom)')
+
+# %% Weight decay
+eta = 0.5
+alpha = 0.5
+lab = 0.1
+# n_steps = 4000
+values = np.linspace(1, n_steps, n_steps)
+
+
+train_loss_05, test_loss_05 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, momentum_step=alpha,
+                                               decay_factor=lab, epochs=n_steps)
+
+plt.plot(values, train_loss_05, label='Etraining05 (mom, weighted)')
+plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
 plt.title('Entropy versus epochs for grad descent')
 plt.xlabel('epochs')
@@ -107,31 +140,6 @@ plt.ylabel('entropy')
 plt.legend()
 plt.savefig('grad_descent.png')
 plt.show()
-
-# %% Momentum
-eta = 0.5
-alpha = 0.5
-epochs = 4000
-values = np.linspace(1, epochs, epochs)
-time_start = time.clock()
-Trainloss04, Testloss04 = momentum(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
-                                   eta, alpha, epochs)
-print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values, Trainloss04, label='Etraining04')
-plt.plot(values, Testloss04, label='Etest04')
-
-# %% Weight decay
-eta = 0.5
-alpha = 0.5
-lab = 0.1
-epochs = 4000
-values = np.linspace(1, epochs, epochs)
-time_start = time.clock()
-Trainloss05, Testloss05 = weightdecay(Xtrain_new, Ttrain_new, Xtest_new,
-                                      Ttest_new, eta, alpha, lab, epochs)
-print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
-plt.plot(values, Trainloss04, label='Etraining04')
-plt.plot(values, Testloss04, label='Etest04')
 
 # %% Extras
 ## calculate time elapsed for one grad calculation
