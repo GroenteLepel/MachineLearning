@@ -14,28 +14,39 @@ import time
 # get_ipython().run_line_magic('matplotlib', 'notebook') #voor Laurens de jupiter-banaan
 import matplotlib.pyplot as plt
 import os
+from ml_functions import *
 
 # pick your path
-os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/')
+os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
 
+# X indicates the coordinates of the images, normalized between 0-1 by dividing
+# by 255.
+# T indicates the label of each image, which we cherry-pick only the 3's and 7's
+# and give these a 0 or 1 according to the 3 or 7 later on.
 Xtrain = data['mnist']['train_images'][0][0] / 255
 Xtest = data['mnist']['test_images'][0][0] / 255
 Ttrain = data['mnist']['train_labels'][0][0]
 Ttest = data['mnist']['test_labels'][0][0]
 
-# selecting data, only 3's and 7's needed
+# Selecting data, only 3's and 7's needed
 indextrain = [i for i, x in enumerate(Ttrain) if x == 3 or x == 7]
 indextest = [i for i, x in enumerate(Ttest) if x == 3 or x == 7]
 
+# *train_new indicates the array but with only the 3's and 7s', labeled as
+# 0's and 1's respectively.
 Xtrain_new = np.zeros((28, 28, len(indextrain)))
 Xtest_new = np.zeros((28, 28, len(indextest)))
 Ttrain_new = np.zeros(len(indextrain))
 Ttest_new = np.zeros(len(indextest))
 
 # manipulating data to boolean values instead of 3 or 7
+# TODO: only every label that needs to be 0 can be changed, since Ttrain_new
+#  already is an array of zeros.
+# TODO: remove the damned for-loop.
+
 for i, x in enumerate(indextrain):
     if Ttrain[x] == 3:
         Ttrain_new[i] = 0
@@ -58,119 +69,9 @@ Ttrain_new = Ttrain_new.reshape(len(Ttrain_new), 1)
 Ttest_new = Ttest_new.reshape(len(Ttest_new), 1)
 
 
-# %% Defining functions
-def sigmoid(x):
-    return (1 + np.e ** (-x)) ** (-1)
-
-
-def p(x, w):
-    return sigmoid(x.dot(w))
-
-
-def E(w, X, T):
-    Y = p(X, w)
-    N = len(T)
-    return float(-1. / N * (
-                np.transpose(T).dot((np.log(Y))) + np.transpose(1 - T).dot(
-            (np.log(1 - Y)))))
-
-def Edecay(w, X, T):
-    Y = p(X, w)
-    N = len(T)
-    return float(-1. / N * (
-                np.transpose(T).dot((np.log(Y))) + np.transpose(1 - T).dot(
-            (np.log(1 - Y)))))+np.sum(w**2)*1./len(w)
-
-def grad(w, X, T):  # the derivative of E2 with respect to w_{i}
-    N = len(T)
-    diff = (p(Xtrain_new, w) - Ttrain_new)
-    return np.transpose(1. / N * np.transpose(diff).dot(X))
-
-def graddecay(w,X,T,lab):
-    N=len(T)
-    diff = (p(Xtrain_new, w) - Ttrain_new)
-    return np.transpose(1. / N * np.transpose(diff).dot(X))+lab*w/len(w)
-
-def Hessian(w, X, T):
-    Y = p(X, w)
-    N = len(T)
-    return 1. / N * (np.transpose(X).dot((((1 - Y) * (Y) * X))))
-
-def Hessiandecay(w, X, T,lab):
-    Y = p(X, w)
-    N = len(T)
-    return 1. / N * (np.transpose(X).dot((((1 - Y) * (Y) * X))))+np.identity(n)*lab*1./len(w)
-
-
-def entropy(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000):
-    # initializing constants
-    w = np.random.uniform(-0.01, 0.01, (784, 1))
-    Trainloss = np.zeros(epochs)
-    Testloss = np.zeros(epochs)
-
-    for l in range(0, epochs):
-        if l % int(epochs / 4) == 0:
-            print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),
-                                                         eta))
-        dw = -eta * grad(w, Xtrain_new, Ttrain_new)
-        w = w + dw
-        Trainloss[l] = E(w, Xtrain, Ttrain)
-        Testloss[l] = E(w, Xtest, Ttest)
-
-    return Trainloss, Testloss
-
-def decay(Xtrain, Ttrain, Xtest, Ttest, eta, epochs=10000): #This function is not correct yet, just a copy of entropy
-    # initializing constants
-    w = np.random.uniform(-0.01, 0.01, (784, 1))
-    Trainloss = np.zeros(epochs)
-    Testloss = np.zeros(epochs)
-
-    for l in range(0, epochs):
-  #      if l % int(epochs / 4) == 0:
-#            print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
-        dw = -eta * grad(w, Xtrain_new, Ttrain_new)
-        w = w + dw
-        Trainloss[l] = E(w, Xtrain, Ttrain)
-        Testloss[l] = E(w, Xtest, Ttest)
-
-    return Trainloss, Testloss
-
-def momentum(Xtrain, Ttrain, Xtest, Ttest, eta,alpha,epochs):
-    # initializing constants
-    dw=0
-    w = np.random.uniform(-0.01, 0.01, (784, 1))
-    Trainloss = np.zeros(epochs)
-    Testloss = np.zeros(epochs)
-
-    for l in range(0, epochs):
-  #      if l % int(epochs / 4) == 0:
-#           print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
-        dw = -eta * grad(w, Xtrain_new, Ttrain_new)+alpha*dw
-        w = w + dw
-        Trainloss[l] = E(w, Xtrain, Ttrain)
-        Testloss[l] = E(w, Xtest, Ttest)
-
-    return Trainloss, Testloss
-
-def weightdecay(Xtrain, Ttrain, Xtest, Ttest, eta,alpha,lab, epochs):
-    # initializing constants
-    dw=0
-    w = np.random.uniform(-0.01, 0.01, (784, 1))
-    Trainloss = np.zeros(epochs)
-    Testloss = np.zeros(epochs)
-
-    for l in range(0, epochs):
-  #      if l % int(epochs / 4) == 0:
-#           print('{0:d}% done with eta={1:4.2f}'.format(int(l / (epochs / 4)),eta))
-        dw = -eta * graddecay(w, Xtrain_new, Ttrain_new,lab)+alpha*dw
-        w = w + dw
-        Trainloss[l] = E(w, Xtrain, Ttrain)
-        Testloss[l] = E(w, Xtest, Ttest)
-
-    return Trainloss, Testloss
 # %% Grad descent for different etas
 # plotting entropy as function of epochs
-epochs = 10000
+epochs = 4000
 values = np.linspace(1, epochs, epochs)
 
 eta = 0.3
@@ -209,29 +110,28 @@ plt.show()
 
 # %% Momentum
 eta = 0.5
-alpha=0.5
-epochs=4000
+alpha = 0.5
+epochs = 4000
 values = np.linspace(1, epochs, epochs)
 time_start = time.clock()
-Trainloss04, Testloss04 = momentum(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new, eta,alpha, epochs)
+Trainloss04, Testloss04 = momentum(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new,
+                                   eta, alpha, epochs)
 print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
 plt.plot(values, Trainloss04, label='Etraining04')
 plt.plot(values, Testloss04, label='Etest04')
-
 
 # %% Weight decay
 eta = 0.5
-alpha=0.5
-lab=0.1
-epochs=4000
+alpha = 0.5
+lab = 0.1
+epochs = 4000
 values = np.linspace(1, epochs, epochs)
 time_start = time.clock()
-Trainloss05, Testloss05 = weightdecay(Xtrain_new, Ttrain_new, Xtest_new, Ttest_new, eta,alpha,lab, epochs)
+Trainloss05, Testloss05 = weightdecay(Xtrain_new, Ttrain_new, Xtest_new,
+                                      Ttest_new, eta, alpha, lab, epochs)
 print('eta=0.7 done in {0:d} seconds'.format(int(time.clock() - time_start)))
 plt.plot(values, Trainloss04, label='Etraining04')
 plt.plot(values, Testloss04, label='Etest04')
-
-
 
 # %% Extras
 ## calculate time elapsed for one grad calculation
