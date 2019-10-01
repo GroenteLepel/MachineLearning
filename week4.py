@@ -71,69 +71,91 @@ test_labels = test_labels.reshape(len(test_labels), 1)
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 400
+n_steps = 10
 values = np.linspace(1, n_steps, n_steps)
+#
+# eta = 0.3
+# train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                step_strength=eta,
+#                                                epochs=n_steps)
+# # We find that the Testloss had a minimum value around 6500 epochs. Going to
+# # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
+# # around 6500 epochs. Now we look at what happens when we use different eta
+#
+#
+# eta = 0.9
+# train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                step_strength=eta,
+#                                                epochs=n_steps)
+#
+# eta = 0.1
+# train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                step_strength=eta,
+#                                                epochs=n_steps)
+#
+#
+# # %% Momentum
+# eta = 0.5
+# alpha = 0.5
+#
+# train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                step_strength=eta,
+#                                                momentum_step=alpha,
+#                                                epochs=n_steps)
+#
+#
+# # %% Weight decay
+# eta = 0.5
+# alpha = 0.5
+# lab = 0.1
+#
+# train_loss_05, test_loss_05 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                step_strength=eta,
+#                                                momentum_step=alpha,
+#                                                decay_factor=lab, epochs=n_steps)
 
-eta = 0.3
-train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
-# We find that the Testloss had a minimum value around 6500 epochs. Going to
-# 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
-# around 6500 epochs. Now we look at what happens when we use different eta
+# %% Newtonian decay
 
+train_loss_newt, test_loss_newt = gradient_descent(train_coords, train_labels
+                                                   , test_coords, test_labels,
+                                                   newtonian=True,
+                                                   epochs=n_steps)
 
-eta = 0.9
-train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
+print(np.min(train_loss_newt))
+print(np.min(test_loss_newt))
 
-eta = 0.1
-train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
+# After 10 iterations, Etrain = 0.10, Etest = 0.14, so way to high. something
+# is wrong...
 
-
-# %% Momentum
-eta = 0.5
-alpha = 0.5
-
-train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, momentum_step=alpha,
-                                               epochs=n_steps)
-
-
-# %% Weight decay
-eta = 0.5
-alpha = 0.5
-lab = 0.1
-
-train_loss_05, test_loss_05 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, momentum_step=alpha,
-                                               decay_factor=lab, epochs=n_steps)
-
-
+# %% Plotting
 # TODO: write away this data into a text file and plot using a different python
 #  script.
-plt.plot(values, train_loss_03, label='Etraining03')
-plt.plot(values, test_loss_03, label='Etest03')
+# plt.plot(values, train_loss_03, label='Etraining03')
+# plt.plot(values, test_loss_03, label='Etest03')
+#
+# plt.plot(values, train_loss_09, label='Etraining09')
+# plt.plot(values, test_loss_09, label='Etest09')
+#
+# plt.plot(values, train_loss_01, label='Etraining01')
+# plt.plot(values, test_loss_01, label='Etest01')
+#
+# plt.plot(values, train_loss_04, label='Etraining04 (mom)')
+# plt.plot(values, test_loss_04, label='Etest04 (mom)')
+#
+# plt.plot(values, train_loss_05, label='Etraining05 (mom, weighted)')
+# plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
-plt.plot(values, train_loss_09, label='Etraining09')
-plt.plot(values, test_loss_09, label='Etest09')
 
-plt.plot(values, train_loss_01, label='Etraining01')
-plt.plot(values, test_loss_01, label='Etest01')
+plt.plot(values, train_loss_newt, label='Etraining (newt)')
+plt.plot(values, test_loss_newt, label='Etest (newt)')
 
-plt.plot(values, train_loss_04, label='Etraining04 (mom)')
-plt.plot(values, test_loss_04, label='Etest04 (mom)')
-
-plt.plot(values, train_loss_05, label='Etraining05 (mom, weighted)')
-plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
-
-plt.yscale('log')
-plt.xscale('log')
+# plt.yscale('log')
+# plt.xscale('log')
 
 plt.title('Entropy versus epochs for grad descent')
 plt.xlabel('epochs')

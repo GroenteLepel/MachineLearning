@@ -88,8 +88,8 @@ def hessian(weight, coords, label, decay_factor):
 
 
 def gradient_descent(train_coords, train_labels, test_coords, test_labels,
-                     step_strength, momentum_step=0.0, decay_factor=0.0,
-                     epochs=10000):
+                     step_strength=0.0, momentum_step=0.0, decay_factor=0.0,
+                     newtonian=False, epochs=10000):
     """
     Function performing the method of gradient descent by initializing a random
     w and updating it according to the gradient (gradient_function) of the
@@ -129,10 +129,21 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
         if l % int(epochs / 4) == 0:
             print('{0:d}% done.'.format(
                 int(l / (epochs / 4) * 25)))
-
-        dw = -step_strength \
-             * gradient_function(w, train_coords, train_labels, decay_factor) \
-             + momentum_step * dw
+        if newtonian:
+            # TODO: implement correctly. The assignment says to use the inverse
+            #  of the Hessian, but I do not know how to do this in the array
+            #  form that is used.
+            dw = - np.transpose(hessian(w,
+                                        train_coords, train_labels,
+                                        decay_factor)
+                                ) \
+                .dot(gradient_function(w, train_coords, train_labels,
+                                       decay_factor))
+        else:
+            dw = -step_strength \
+                 * gradient_function(w, train_coords, train_labels,
+                                     decay_factor) \
+                 + momentum_step * dw
         w = w + dw
         train_loss[l] = loss_function(w, train_coords, train_labels,
                                       decay_factor)
