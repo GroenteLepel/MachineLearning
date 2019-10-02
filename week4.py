@@ -14,6 +14,7 @@ import time
 # get_ipython().run_line_magic('matplotlib', 'notebook') #voor Laurens de jupiter-banaan
 import matplotlib.pyplot as plt
 import os
+os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 from ml_functions import *
 
 # pick your path
@@ -151,3 +152,16 @@ plt.show()
 #
 ## find minimum of testloss
 # print(int(np.where(Testloss==min(Testloss))[0]))
+
+# %% Stochastic gradient descent
+
+# declaring amount of steps and indicators for all the values.
+n_steps = 10000
+values = np.linspace(1, n_steps, n_steps)
+
+eta = 0.3
+train_loss_06, test_loss_06 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               eta, epochs=n_steps,batch_size=20)
+plt.plot(values, train_loss_06, label='Etraining06')
+plt.plot(values, test_loss_06, label='Etest06')

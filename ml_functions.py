@@ -101,7 +101,7 @@ def classification_check(coords, labels, weights):
 
 def gradient_descent(train_coords, train_labels, test_coords, test_labels,
                      step_strength, momentum_step=0.0, decay_factor=0.0,
-                     epochs=10000):
+                     epochs=10000,batch_size=-1):
     """
     Function performing the method of gradient descent by initializing a random
     w and updating it according to the gradient (gradient_function) of the
@@ -124,10 +124,14 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     :param decay_factor: factor indicating the strength of the decay method to
     determine the minimum in loss. Set to zero if you don't want to include
     this.
+    :param batch_size: every epoch a random subset of size batch_size of the 
+    data is used to calculate the gradient. 
     :return: The loss in the training and testing. The smaller these are, the
     better the training went. Should converge relative to the number of epochs.
     """
     # initializing constants
+    if batch_size==-1:
+        batch_size=len(train_labels)
     dw = np.zeros((784, 1))
     w = np.random.normal(0, 1./np.sqrt(784), (784, 1))
     train_loss = np.zeros(epochs)
@@ -135,15 +139,18 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     print('Starting gradient descent using eta={0:4.2f}, alpha={1:4.2f}, '
           'decay_factor={2:4.2f}.'
           .format(step_strength, momentum_step, decay_factor))
-
+    indices=np.linspace(0,len(train_labels)-1,len(train_labels),dtype=int)
     time_start = time.time()
     for l in range(0, epochs):
+        selectedindices=np.sort(np.random.choice(indices,batch_size, replace=False))
+        train_coordsbatch=train_coords[selectedindices]
+        train_labelsbatch=train_labels[selectedindices]
         if l % int(epochs / 4) == 0:
             print('{0:d}% done.'.format(
                 int(l / (epochs / 4) * 25)))
 
         dw = -step_strength \
-             * gradient_function(w, train_coords, train_labels, decay_factor) \
+             * gradient_function(w, train_coordsbatch, train_labelsbatch, decay_factor) \
              + momentum_step * dw
         w = w + dw
         train_loss[l] = loss_function(w, train_coords, train_labels,
