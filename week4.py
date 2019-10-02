@@ -163,7 +163,7 @@ plt.ylabel('entropy')
 plt.legend()
 plt.savefig('grad_descent.png')
 plt.show()
-
+# test
 # %% Extras
 ## calculate time elapsed for one grad calculation
 # time_start = time.clock()
