@@ -19,6 +19,8 @@ from ml_functions import *
 
 # pick your path
 #os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
 
@@ -71,11 +73,11 @@ test_labels = test_labels.reshape(len(test_labels), 1)
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 400
+n_steps = int(1e4)
 values = np.linspace(1, n_steps, n_steps)
 
 eta = 0.3
-train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
+train_loss_03, test_loss_03, weights = gradient_descent(train_coords, train_labels,
                                                test_coords, test_labels,
                                                eta, epochs=n_steps)
 # We find that the Testloss had a minimum value around 6500 epochs. Going to
