@@ -65,6 +65,7 @@ for i, x in enumerate(indextest):
 
 # reshaping 28x28 matrices to one long array of 784 entries
 # each row now is a data point and each column the dimension
+# TODO: x_0 must be added here to prevent bias.
 train_coords = np.transpose(np.reshape(train_coords, (784, len(train_labels))))
 test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
 train_labels = train_labels.reshape(len(train_labels), 1)
