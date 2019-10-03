@@ -18,6 +18,8 @@ os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 # os.chdir('/home/lvalst/Courses/Machine Learning/week4')
 # os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
+
+
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
 
@@ -25,8 +27,8 @@ data = scipy.io.loadmat('mnistAll.mat')
 # by 255.
 # T indicates the label of each image, which we cherry-pick only the 3's and 7's
 # and give these a 0 or 1 according to the 3 or 7 later on.
-train_coords_raw = data['mnist']['train_images'][0][0] / 255
-test_coords_raw = data['mnist']['test_images'][0][0] / 255
+train_coords_raw = data['mnist']['train_images'][0][0] / MAX_INT
+test_coords_raw = data['mnist']['test_images'][0][0] / MAX_INT
 train_labels_raw = data['mnist']['train_labels'][0][0]
 test_labels_raw = data['mnist']['test_labels'][0][0]
 
@@ -36,8 +38,8 @@ indextest = [i for i, x in enumerate(test_labels_raw) if x == 3 or x == 7]
 
 # *train_new indicates the array but with only the 3's and 7s', labeled as
 # 0's and 1's respectively.
-train_coords = np.zeros((28, 28, len(indextrain)))
-test_coords = np.zeros((28, 28, len(indextest)))
+train_coords = np.zeros((RESOLUTION, RESOLUTION, len(indextrain)))
+test_coords = np.zeros((RESOLUTION, RESOLUTION, len(indextest)))
 train_labels = np.zeros(len(indextrain))
 test_labels = np.zeros(len(indextest))
 
@@ -62,7 +64,7 @@ for i, x in enumerate(indextest):
 
 # reshaping 28x28 matrices to one long array of 784 entries
 # each row now is a data point and each column the dimension
-# TODO: x_0 must be added here to prevent bias.
+#  TODO: x_0 must be added here to prevent bias.
 train_coords = np.transpose(np.reshape(train_coords, (784, len(train_labels))))
 test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
 train_labels = train_labels.reshape(len(train_labels), 1)
@@ -73,6 +75,7 @@ test_labels = test_labels.reshape(len(test_labels), 1)
 # declaring amount of steps and indicators for all the values.
 n_steps = 10
 values = np.linspace(1, n_steps, n_steps)
+w = np.random.normal(0, 1. / np.sqrt(784), (784, 1))
 #
 # eta = 0.3
 # train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
@@ -141,8 +144,8 @@ values = np.linspace(1, n_steps, n_steps)
 
 
 # %% Newtonian
-eta = 0.5
-alpha = 0.5
+# eta = 0.5
+# alpha = 0.5
 #
 # train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
 #                                                test_coords, test_labels,
@@ -150,14 +153,14 @@ alpha = 0.5
 #                                                epochs=n_steps)
 
 
-train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
-                                                      , test_coords,
-                                                      test_labels,
-                                                      newtonian=True,
-                                                      epochs=n_steps)
+# train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
+#                                                       , test_coords,
+#                                                       test_labels,
+#                                                       newtonian=True,
+#                                                       epochs=n_steps)
 
-print(np.min(train_loss_newt))
-print(np.min(test_loss_newt))
+# print(np.min(train_loss_newt))
+# print(np.min(test_loss_newt))
 
 # After 10 iterations, Etrain = 0.10, Etest = 0.14, so way to high. something
 # is wrong...
@@ -181,18 +184,18 @@ print(np.min(test_loss_newt))
 # plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
 
-plt.plot(values, train_loss_newt, label='Etraining (newt)')
-plt.plot(values, test_loss_newt, label='Etest (newt)')
+# plt.plot(values, train_loss_newt, label='Etraining (newt)')
+# plt.plot(values, test_loss_newt, label='Etest (newt)')
 
 # plt.yscale('log')
 # plt.xscale('log')
 
-plt.title('Entropy versus epochs for grad descent')
-plt.xlabel('epochs')
-plt.ylabel('entropy')
-plt.legend()
-plt.savefig('grad_descent.png')
-plt.show()
+# plt.title('Entropy versus epochs for grad descent')
+# plt.xlabel('epochs')
+# plt.ylabel('entropy')
+# plt.legend()
+# plt.savefig('grad_descent.png')
+# plt.show()
 
 # %% Extras
 ## calculate time elapsed for one grad calculation

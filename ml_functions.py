@@ -2,7 +2,11 @@
 import numpy as np
 import time
 
+# %% Global constants
+RESOLUTION = 28  # resolution of an image
+MAX_INT = 255  # max intensity of a pixel
 
+# %% functions
 def sigmoid(x):
     return (1 + np.e ** (-x)) ** (-1)
 
@@ -47,7 +51,7 @@ def gradient_function(weights, coords, label, decay_factor):
     Gradient (derivative) of the loss_function with respect to the weight for
     each data point (w_i). This is used for determining the direction towards
     the a minimum in E(w) (loss_function).
-    :param weight: weight belonging to data point with coordinates X and its
+    :param weights: weight belonging to data point with coordinates X and its
     label
     :param coords: N-dimensional coordinates for each data point
     :param label: label given to each data point with coordinates "coords", is
@@ -63,29 +67,41 @@ def gradient_function(weights, coords, label, decay_factor):
 
 
 # TODO: implement
-def hessian(weights, coords, label, decay_factor):
+def hessian(weights, coords, decay_factor):
     """
     Hessian information used to optimize finding a minimum in E
     (loss_function). By making a quadratic approximation to E around w, the
     Hessian is connected to the second order approximation.
-    :param weight: weight belonging to data point with coordinates X and its
+    :param weights: weight belonging to data point with coordinates X and its
     label
     :param coords: N-dimensional coordinates for each data point
-    :param label: label given to each data point with coordinates "coords", is
-    either 0 or 1.
     :param decay_factor: factor indicating the strength of the decay method to
     determine the minimum in loss. Set to zero if you don't want to include this
     :return:
     """
-    n_points = len(label)
-    if decay_factor != 0.0:
-        decay_term = np.identity(n_points) * decay_factor * 1. / len(weights)
-    else:
-        decay_term = 0.0
+    # shape (dxd, n), or (784, n)
+    t_coords = np.transpose(coords)
+    n_points = len(t_coords)
+
+    # shape (n, 1)
     y = probability(coords, weights)
 
-    return 1. / n_points * (
-        np.transpose(coords).dot(((1 - y) * y * coords))) + decay_term
+    if decay_factor != 0.0:
+        # shape (dxd)
+        decay_term = np.identity(RESOLUTION*RESOLUTION) \
+                     * decay_factor / len(weights)
+    else:
+        decay_term = 0.0
+
+    # if you want to calc hessian for element i, j, so H_ij:
+    i, j = 0, 1  # just for psuedocode-sake
+
+    # this is element i, j of hessian matrix:
+    H = 1. / n_points * (t_coords[i] * y * (1 - y) * t_coords[j]).sum()
+
+    return H
+    # return 1. / n_points * (
+    #     np.transpose(coords).dot(((1 - y) * y * coords))) + decay_term
 
 
 def classification_check(coords, labels, weights):
@@ -159,7 +175,7 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             #  of the Hessian, but I do not know how to do this in the array
             #  form that is used.
             dw = - np.transpose(hessian(w,
-                                        train_coords, train_labels,
+                                        train_coords,
                                         decay_factor)
                                 ) \
                 .dot(gradient_function(w, train_coords, train_labels,
