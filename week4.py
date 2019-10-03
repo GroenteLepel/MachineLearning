@@ -19,7 +19,6 @@ os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 # os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
 
-
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
 
@@ -43,7 +42,6 @@ test_coords = np.zeros((RESOLUTION, RESOLUTION, len(indextest)))
 train_labels = np.zeros(len(indextrain))
 test_labels = np.zeros(len(indextest))
 
-
 # manipulating data to boolean values instead of 3 or 7
 # TODO: only every label that needs to be 0 can be changed, since Ttrain_new
 #  already is an array of zeros.
@@ -66,8 +64,10 @@ for i, x in enumerate(indextest):
 # reshaping 28x28 matrices to one long array of 784 entries
 # each row now is a data point and each column the dimension
 #  TODO: x_0 must be added here to prevent bias.
-train_coords = np.transpose(np.reshape(train_coords, (784, len(train_labels))))
-test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
+train_coords = np.transpose(np.reshape(train_coords,
+                                       (RES_SQ, len(train_labels))))
+test_coords = np.transpose(np.reshape(test_coords,
+                                      (RES_SQ, len(test_labels))))
 train_labels = train_labels.reshape(len(train_labels), 1)
 test_labels = test_labels.reshape(len(test_labels), 1)
 
@@ -77,9 +77,12 @@ del indextest, indextrain
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 10
+n_steps = 100
 values = np.linspace(1, n_steps, n_steps)
-w = np.random.normal(0, 1. / np.sqrt(784), (784, 1))
+w = np.random.normal(0, 1. / np.sqrt(RES_SQ), (RES_SQ, 1))
+
+Hdiag, Hmat = hessian(w, train_coords, 0.0)
+
 #
 # eta = 0.3
 # train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
@@ -148,21 +151,22 @@ w = np.random.normal(0, 1. / np.sqrt(784), (784, 1))
 
 
 # %% Newtonian
-# eta = 0.5
-# alpha = 0.5
+eta = 0.5
+alpha = 0.5
 #
-# train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                eta, momentum_step=alpha,
-#                                                epochs=n_steps)
-
-
-# train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
-#                                                       , test_coords,
+# train_loss_04, test_loss_04, w = gradient_descent(train_coords, train_labels,
+#                                                   test_coords, test_labels,
+#                                                   eta, momentum_step=alpha,
+#                                                   epochs=n_steps)
+#
+# train_loss_newt, test_loss_newt, w = gradient_descent(train_coords,
+#                                                       train_labels,
+#                                                       test_coords,
 #                                                       test_labels,
+#                                                       eta,
 #                                                       newtonian=True,
 #                                                       epochs=n_steps)
-
+#
 # print(np.min(train_loss_newt))
 # print(np.min(test_loss_newt))
 
@@ -190,10 +194,10 @@ w = np.random.normal(0, 1. / np.sqrt(784), (784, 1))
 
 # plt.plot(values, train_loss_newt, label='Etraining (newt)')
 # plt.plot(values, test_loss_newt, label='Etest (newt)')
-
-# plt.yscale('log')
-# plt.xscale('log')
-
+#
+# # plt.yscale('log')
+# # plt.xscale('log')
+#
 # plt.title('Entropy versus epochs for grad descent')
 # plt.xlabel('epochs')
 # plt.ylabel('entropy')
