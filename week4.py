@@ -9,17 +9,14 @@ authors: Ludo van Alst, Laurens Sluijterman, Daniël Kok
 
 # %% Importing modules
 import scipy.io
-import numpy as np
-import time
-# get_ipython().run_line_magic('matplotlib', 'notebook') #voor Laurens de jupiter-banaan
 import matplotlib.pyplot as plt
 import os
-os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 from ml_functions import *
 
 # pick your path
-#os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
-os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+# os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+# os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
 # %% Importing data
 data = scipy.io.loadmat('mnistAll.mat')
@@ -123,40 +120,41 @@ values = np.linspace(1, n_steps, n_steps)
 #                                                decay_factor=lab, epochs=n_steps)
 
 # %% Newtonian decay
-eta = 0.3
-train_loss_03, test_loss_03, weights = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
+# eta = 0.3
+# train_loss_03, test_loss_03, weights = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps)
 # We find that the Testloss had a minimum value around 6500 epochs. Going to
 # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # around 6500 epochs. Now we look at what happens when we use different eta
 
 
-eta = 0.9
-train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
+# eta = 0.9
+# train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps)
+#
+# eta = 0.1
+# train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps)
 
-eta = 0.1
-train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps)
 
-
-# %% Momentum
+# %% Newtonian
 eta = 0.5
 alpha = 0.5
+#
+# train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, momentum_step=alpha,
+#                                                epochs=n_steps)
 
-train_loss_04, test_loss_04 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, momentum_step=alpha,
-                                               epochs=n_steps)
 
-
-train_loss_newt, test_loss_newt = gradient_descent(train_coords, train_labels
-                                                   , test_coords, test_labels,
-                                                   newtonian=True,
-                                                   epochs=n_steps)
+train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
+                                                      , test_coords,
+                                                      test_labels,
+                                                      newtonian=True,
+                                                      epochs=n_steps)
 
 print(np.min(train_loss_newt))
 print(np.min(test_loss_newt))
@@ -195,7 +193,7 @@ plt.ylabel('entropy')
 plt.legend()
 plt.savefig('grad_descent.png')
 plt.show()
-# test
+
 # %% Extras
 ## calculate time elapsed for one grad calculation
 # time_start = time.clock()
@@ -208,12 +206,13 @@ plt.show()
 # %% Stochastic gradient descent
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 10000
-values = np.linspace(1, n_steps, n_steps)
-
-eta = 0.3
-train_loss_06, test_loss_06 = gradient_descent(train_coords, train_labels,
-                                               test_coords, test_labels,
-                                               eta, epochs=n_steps,batch_size=20)
-plt.plot(values, train_loss_06, label='Etraining06')
-plt.plot(values, test_loss_06, label='Etest06')
+# n_steps = 10000
+# values = np.linspace(1, n_steps, n_steps)
+#
+# eta = 0.3
+# train_loss_06, test_loss_06 = gradient_descent(train_coords, train_labels,
+#                                                test_coords, test_labels,
+#                                                eta, epochs=n_steps,
+#                                                batch_size=20)
+# plt.plot(values, train_loss_06, label='Etraining06')
+# plt.plot(values, test_loss_06, label='Etest06')
