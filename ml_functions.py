@@ -85,7 +85,7 @@ def hessian(weights, coords, decay_factor):
 
     # shape (n, 1)
     y = probability(coords, weights)
-    y = np.reshape(y, len(y))
+    
     if decay_factor != 0.0:
         # shape (dxd)
         decay_term = np.identity(RESOLUTION*RESOLUTION) \
@@ -93,15 +93,8 @@ def hessian(weights, coords, decay_factor):
     else:
         decay_term = 0.0
 
-    # if you want to calc hessian for element i, j, so H_ij:
-    i, j = 0, 1  # just for psuedocode-sake
-
-    # this is element i, j of hessian matrix:
-    H = 1. / n_points * (t_coords[i] * y * (1 - y) * t_coords[j]).sum()
-
-    return H
-    # return 1. / n_points * (
-    #     np.transpose(coords).dot(((1 - y) * y * coords))) + decay_term
+    return 1. / n_points * (
+        np.transpose(coords).dot(((1 - y) * y * coords))) + decay_term
 
 
 def classification_check(coords, labels, weights):
