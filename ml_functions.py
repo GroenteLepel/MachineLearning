@@ -48,7 +48,7 @@ def loss_function(weights, coords, label, decay_factor):
     )
 
 
-def gradient_function(weights, coords, label, decay_factor):
+def gradient_function(weights, coords, labels, decay_factor):
     """
     Gradient (derivative) of the loss_function with respect to the weight for
     each data point (w_i). This is used for determining the direction towards
@@ -62,8 +62,8 @@ def gradient_function(weights, coords, label, decay_factor):
     determine the minimum in loss. Set to zero if you don't want to include this
     :return:
     """
-    n_points = len(label)  # amount of data points
-    diff = (probability(coords, weights) - label)
+    n_points = len(labels)  # amount of data points
+    diff = (probability(coords, weights) - labels)
     return np.transpose(1. / n_points * np.transpose(diff).dot(coords)) \
            + decay_factor * weights / len(weights)
 
@@ -87,7 +87,6 @@ def hessian(weights, coords, decay_factor):
 
     # shape (n, 1)
     y = probability(coords, weights)
-
     if decay_factor != 0.0:
         # shape (dxd)
         decay_term = np.identity(RESOLUTION * RESOLUTION) \
