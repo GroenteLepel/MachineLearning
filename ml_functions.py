@@ -85,7 +85,7 @@ def hessian(weights, coords, decay_factor):
 
     # shape (n, 1)
     y = probability(coords, weights)
-
+    y = np.reshape(y, len(y))
     if decay_factor != 0.0:
         # shape (dxd)
         decay_term = np.identity(RESOLUTION*RESOLUTION) \

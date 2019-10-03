@@ -43,6 +43,7 @@ test_coords = np.zeros((RESOLUTION, RESOLUTION, len(indextest)))
 train_labels = np.zeros(len(indextrain))
 test_labels = np.zeros(len(indextest))
 
+
 # manipulating data to boolean values instead of 3 or 7
 # TODO: only every label that needs to be 0 can be changed, since Ttrain_new
 #  already is an array of zeros.
@@ -69,6 +70,9 @@ train_coords = np.transpose(np.reshape(train_coords, (784, len(train_labels))))
 test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
 train_labels = train_labels.reshape(len(train_labels), 1)
 test_labels = test_labels.reshape(len(test_labels), 1)
+
+del train_coords_raw, test_coords_raw, train_labels_raw, test_labels_raw
+del indextest, indextrain
 
 # %% Grad descent for different etas
 
