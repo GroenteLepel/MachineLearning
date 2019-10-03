@@ -68,6 +68,10 @@ test_coords = np.transpose(np.reshape(test_coords, (784, len(test_labels))))
 train_labels = train_labels.reshape(len(train_labels), 1)
 test_labels = test_labels.reshape(len(test_labels), 1)
 
+# put a 1 in front for each datapoint (this is the x_0 coordinate)
+train_coords = np.insert(train_coords, 0, 1, axis=1)
+test_coords = np.insert(test_coords, 0, 1, axis=1)
+
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
@@ -124,6 +128,13 @@ values = np.linspace(1, n_steps, n_steps)
 # train_loss_03, test_loss_03, weights = gradient_descent(train_coords, train_labels,
 #                                                test_coords, test_labels,
 #                                                eta, epochs=n_steps)
+
+eta = 0.3
+train_loss_03, test_loss_03, weights_03 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta, epochs=n_steps)
 # We find that the Testloss had a minimum value around 6500 epochs. Going to
 # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # around 6500 epochs. Now we look at what happens when we use different eta
@@ -138,7 +149,19 @@ values = np.linspace(1, n_steps, n_steps)
 # train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
 #                                                test_coords, test_labels,
 #                                                eta, epochs=n_steps)
+eta = 0.9
+train_loss_09, test_loss_09, weights_09 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta, epochs=n_steps)
 
+eta = 0.1
+train_loss_01, test_loss_01, weights_01 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta, epochs=n_steps)
 
 # %% Newtonian
 eta = 0.5
@@ -149,6 +172,13 @@ alpha = 0.5
 #                                                eta, momentum_step=alpha,
 #                                                epochs=n_steps)
 
+train_loss_04, test_loss_04, weights_04 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta,
+                                                           momentum_step=alpha,
+                                                           epochs=n_steps)
 
 train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
                                                       , test_coords,
@@ -158,6 +188,14 @@ train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
 
 print(np.min(train_loss_newt))
 print(np.min(test_loss_newt))
+train_loss_05, test_loss_05, weights_05 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta,
+                                                           momentum_step=alpha,
+                                                           decay_factor=lab,
+                                                           epochs=n_steps)
 
 # After 10 iterations, Etrain = 0.10, Etest = 0.14, so way to high. something
 # is wrong...
@@ -205,14 +243,15 @@ plt.show()
 
 # %% Stochastic gradient descent
 
-# declaring amount of steps and indicators for all the values.
-# n_steps = 10000
-# values = np.linspace(1, n_steps, n_steps)
-#
-# eta = 0.3
-# train_loss_06, test_loss_06 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                eta, epochs=n_steps,
-#                                                batch_size=20)
-# plt.plot(values, train_loss_06, label='Etraining06')
-# plt.plot(values, test_loss_06, label='Etest06')
+n_steps = 10000
+values = np.linspace(1, n_steps, n_steps)
+
+eta = 0.3
+train_loss_06, test_loss_06, weights_06 = gradient_descent(train_coords,
+                                                           train_labels,
+                                                           test_coords,
+                                                           test_labels,
+                                                           eta, epochs=n_steps,
+                                                           batch_size=20)
+plt.plot(values, train_loss_06, label='Etraining06')
+plt.plot(values, test_loss_06, label='Etest06')

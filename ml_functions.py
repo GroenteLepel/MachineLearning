@@ -42,7 +42,7 @@ def loss_function(weights, coords, label, decay_factor):
     )
 
 
-def gradient_function(weights, coords, label, decay_factor):
+def gradient_function(weights, coords, labels, decay_factor):
     """
     Gradient (derivative) of the loss_function with respect to the weight for
     each data point (w_i). This is used for determining the direction towards
@@ -56,14 +56,14 @@ def gradient_function(weights, coords, label, decay_factor):
     determine the minimum in loss. Set to zero if you don't want to include this
     :return:
     """
-    n_points = len(label)  # amount of data points
-    diff = (probability(coords, weights) - label)
+    n_points = len(labels)  # amount of data points
+    diff = (probability(coords, weights) - labels)
     return np.transpose(1. / n_points * np.transpose(diff).dot(coords)) \
            + decay_factor * weights / len(weights)
 
 
 # TODO: implement
-def hessian(weights, coords, label, decay_factor):
+def hessian(weights, coords, decay_factor):
     """
     Hessian information used to optimize finding a minimum in E
     (loss_function). By making a quadratic approximation to E around w, the
@@ -77,7 +77,7 @@ def hessian(weights, coords, label, decay_factor):
     determine the minimum in loss. Set to zero if you don't want to include this
     :return:
     """
-    n_points = len(label)
+    n_points = np.shape(coords)[0]
     if decay_factor != 0.0:
         decay_term = np.identity(n_points) * decay_factor * 1. / len(weights)
     else:
@@ -136,8 +136,11 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     # initializing constants
     if batch_size == -1:
         batch_size = len(train_labels)
-    dw = np.zeros((784, 1))
-    w = np.random.normal(0, 1. / np.sqrt(784), (784, 1))
+    dim = np.shape(train_coords)[1]
+    if batch_size==-1:
+        batch_size=len(train_labels)
+    dw = np.zeros((dim, 1))
+    w = np.random.normal(0, 1./np.sqrt(dim), (dim, 1))
     train_loss = np.zeros(epochs)
     test_loss = np.zeros(epochs)
     print('Starting gradient descent using eta={0:4.2f}, alpha={1:4.2f}, '
