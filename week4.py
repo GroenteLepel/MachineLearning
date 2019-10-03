@@ -82,9 +82,16 @@ test_coords = np.insert(test_coords, 0, 1, axis=1)
 # declaring amount of steps and indicators for all the values.
 n_steps = 100
 values = np.linspace(1, n_steps, n_steps)
-# w = np.random.normal(0, 1. / np.sqrt(RES_SQ), (RES_SQ, 1))
+# w = np.random.normal(0, 1. / 10, (RES_SQ+1, 1))
 
-Hdiag, Hmat = hessian(w, train_coords, 0.0)
+# Hdiag, Hmat = hessian(w, train_coords, 0.1)
+# np.linalg.inv(Hmat)
+
+eta = 0.3
+lab = 0.1
+
+testl, trainl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, step_strength=eta, decay_factor=lab, newtonian=True, epochs=n_steps)
+
 
 #
 # eta = 0.3
@@ -138,12 +145,12 @@ Hdiag, Hmat = hessian(w, train_coords, 0.0)
 #                                                test_coords, test_labels,
 #                                                eta, epochs=n_steps)
 
-eta = 0.3
-train_loss_03, test_loss_03, weights_03 = gradient_descent(train_coords,
-                                                           train_labels,
-                                                           test_coords,
-                                                           test_labels,
-                                                           eta, epochs=n_steps)
+# eta = 0.3
+# train_loss_03, test_loss_03, weights_03 = gradient_descent(train_coords,
+#                                                            train_labels,
+#                                                            test_coords,
+#                                                            test_labels,
+#                                                            eta, epochs=n_steps)
 # We find that the Testloss had a minimum value around 6500 epochs. Going to
 # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # around 6500 epochs. Now we look at what happens when we use different eta
@@ -158,24 +165,24 @@ train_loss_03, test_loss_03, weights_03 = gradient_descent(train_coords,
 # train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
 #                                                test_coords, test_labels,
 #                                                eta, epochs=n_steps)
-eta = 0.9
-train_loss_09, test_loss_09, weights_09 = gradient_descent(train_coords,
-                                                           train_labels,
-                                                           test_coords,
-                                                           test_labels,
-                                                           eta, epochs=n_steps)
-
-eta = 0.1
-train_loss_01, test_loss_01, weights_01 = gradient_descent(train_coords,
-                                                           train_labels,
-                                                           test_coords,
-                                                           test_labels,
-                                                           eta, epochs=n_steps)
+# eta = 0.9
+# train_loss_09, test_loss_09, weights_09 = gradient_descent(train_coords,
+#                                                            train_labels,
+#                                                            test_coords,
+#                                                            test_labels,
+#                                                            eta, epochs=n_steps)
+#
+# eta = 0.1
+# train_loss_01, test_loss_01, weights_01 = gradient_descent(train_coords,
+#                                                            train_labels,
+#                                                            test_coords,
+#                                                            test_labels,
+#                                                            eta, epochs=n_steps)
 
 # %% Newtonian
-eta = 0.5
-alpha = 0.5
-#
+# eta = 0.5
+# alpha = 0.5
+# #
 # train_loss_04, test_loss_04, w = gradient_descent(train_coords, train_labels,
 #                                                   test_coords, test_labels,
 #                                                   eta, momentum_step=alpha,
@@ -196,22 +203,22 @@ alpha = 0.5
 #                                                eta, momentum_step=alpha,
 #                                                epochs=n_steps)
 
-train_loss_04, test_loss_04, weights_04 = gradient_descent(train_coords,
-                                                           train_labels,
-                                                           test_coords,
-                                                           test_labels,
-                                                           eta,
-                                                           momentum_step=alpha,
-                                                           epochs=n_steps)
-
-train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
-                                                      , test_coords,
-                                                      test_labels,
-                                                      newtonian=True,
-                                                      epochs=n_steps)
-
-print(np.min(train_loss_newt))
-print(np.min(test_loss_newt))
+# print(np.min(train_loss_newt))
+# print(np.min#
+# train_loss_04, test_loss_04, weights_04 = gradient_descent(train_coords,
+#                                                            train_labels,
+#                                                            test_coords,
+#                                                            test_labels,
+#                                                            eta,
+#                                                            momentum_step=alpha,
+#                                                            epochs=n_steps)
+#
+# train_loss_newt, test_loss_newt, w = gradient_descent(train_coords, train_labels
+#                                                       , test_coords,
+#                                                       test_labels,
+#                                                       newtonian=True,
+#                                                       epochs=n_steps)
+# (test_loss_newt))
 # train_loss_05, test_loss_05, weights_05 = gradient_descent(train_coords,
 #                                                            train_labels,
 #                                                            test_coords,
@@ -243,18 +250,18 @@ print(np.min(test_loss_newt))
 # plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
 
-# plt.plot(values, train_loss_newt, label='Etraining (newt)')
-# plt.plot(values, test_loss_newt, label='Etest (newt)')
-#
+plt.plot(values, trainl, label='Etraining (newt)')
+plt.plot(values, testl, label='Etest (newt)')
+
 # # plt.yscale('log')
 # # plt.xscale('log')
 #
-# plt.title('Entropy versus epochs for grad descent')
-# plt.xlabel('epochs')
-# plt.ylabel('entropy')
-# plt.legend()
-# plt.savefig('grad_descent.png')
-# plt.show()
+plt.title('Entropy versus epochs for grad descent')
+plt.xlabel('epochs')
+plt.ylabel('entropy')
+plt.legend()
+plt.savefig('grad_descent.png')
+plt.show()
 
 # %% Extras
 ## calculate time elapsed for one grad calculation
@@ -267,15 +274,15 @@ print(np.min(test_loss_newt))
 
 # %% Stochastic gradient descent
 
-n_steps = 10000
-values = np.linspace(1, n_steps, n_steps)
-
-eta = 0.3
-train_loss_06, test_loss_06, weights_06 = gradient_descent(train_coords,
-                                                           train_labels,
-                                                           test_coords,
-                                                           test_labels,
-                                                           eta, epochs=n_steps,
-                                                           batch_size=20)
-plt.plot(values, train_loss_06, label='Etraining06')
-plt.plot(values, test_loss_06, label='Etest06')
+# n_steps = 10000
+# values = np.linspace(1, n_steps, n_steps)
+#
+# eta = 0.3
+# train_loss_06, test_loss_06, weights_06 = gradient_descent(train_coords,
+#                                                            train_labels,
+#                                                            test_coords,
+#                                                            test_labels,
+#                                                            eta, epochs=n_steps,
+#                                                            batch_size=20)
+# plt.plot(values, train_loss_06, label='Etraining06')
+# plt.plot(values, test_loss_06, label='Etest06')

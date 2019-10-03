@@ -89,8 +89,9 @@ def hessian(weights, coords, decay_factor):
     y = probability(coords, weights)
     if decay_factor != 0.0:
         # shape (dxd)
-        decay_term = np.identity(RESOLUTION * RESOLUTION) \
-                     * decay_factor / len(weights)
+        n = np.arange(1, len(weights) + 1)
+        decay_term = np.zeros((RES_SQ + 1, RES_SQ + 1))
+        np.fill_diagonal(decay_term, decay_factor / n)
     else:
         decay_term = 0.0
 
@@ -152,10 +153,12 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     Should converge relative to the number of epochs.
     """
     # initializing constants
-    dw = np.zeros((RES_SQ, 1))
+    dw = np.zeros((RES_SQ + 1, 1))
     train_loss, test_loss = np.zeros(epochs), np.zeros(epochs)
     indices = np.linspace(0, len(train_labels) - 1, len(train_labels),
                           dtype=int)
+
+    w = np.random.normal(0, 1. / np.sqrt(RES_SQ + 1), (RES_SQ+1, 1))
 
     print('Starting gradient descent using eta={0:4.2f}, alpha={1:4.2f}, '
           'decay_factor={2:4.2f}.'
@@ -182,14 +185,15 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             #  of the Hessian, but I do not know how to do this in the array
             #  form that is used.
             # take only diagonal elements of hessian to make it pseudo-newtonian
-            hessian_diagonal = hessian(w, train_coords, decay_factor)
-            hessian_inv = np.zeros((RESOLUTION, RESOLUTION))
+            hessian_diagonal, hessian_matrix = hessian(w, train_coords, decay_factor)
+            # hessian_inv = np.zeros((RESOLUTION, RESOLUTION))
             # The inverse of a diagonal matrix is 1 / these elements. Added a
             # very small number to prevent dividing by zero.
-            np.fill_diagonal(hessian_inv, 1 / (hessian_diagonal + 1e-2))
+            # np.fill_diagonal(hessian_inv, 1 / (hessian_diagonal + 1e-2))
 
             # convert hessian into an array to fit with our calculation method
-            hessian_inv = np.asarray(hessian_inv).reshape(-1)
+            # hessian_inv = np.asarray(hessian_inv).reshape(-1)
+            hessian_inv = np.linalg.inv(hessian_matrix)
 
             dw = - hessian_inv.dot(gradient_function(w, train_coords_sel,
                                                      train_labels_sel,
