@@ -1,6 +1,7 @@
 # %% Defining functions
 import numpy as np
 import time
+from scipy.optimize import minimize
 
 # %% Global constants
 RESOLUTION = 28  # resolution of an image
@@ -66,6 +67,16 @@ def gradient_function(weights, coords, labels, decay_factor):
     diff = (probability(coords, weights) - labels)
     return np.transpose(1. / n_points * np.transpose(diff).dot(coords)) \
            + decay_factor * weights / len(weights)
+           
+          
+def linesearch_gradient_function(gamma, gradE, weights, coords, labels, decay_factor):
+    """
+    For the line search method we need to minimize E(w+gamma*d) where d=-gradE.
+    To do this we wrote a function to return the above expression E(w+gamma*d).
+    We can minimize this function using scipy.optimize.minimize module
+    :return: E(w+gamma*d)
+    """
+    return gradient_function(weights - gamma*gradE, coords, labels, decay_factor)
 
 
 # TODO: implement
@@ -79,7 +90,7 @@ def hessian(weights, coords, decay_factor):
     :param coords: N-dimensional coordinates for each data point
     :param decay_factor: factor indicating the strength of the decay method to
     determine the minimum in loss. Set to zero if you don't want to include this
-    :return:
+    :return: hessian
     """
     # shape (dxd, n), or (784, n)
     t_coords = np.transpose(coords)
@@ -95,15 +106,8 @@ def hessian(weights, coords, decay_factor):
     else:
         decay_term = 0.0
 
-    full_matrix = 1. / n_points * (
+    return 1. / n_points * (
         np.transpose(coords).dot(((1 - y) * y * coords))) + decay_term
-
-    diagonal = np.zeros(len(t_coords))
-    y = y.reshape(len(y))
-    for i in range(len(t_coords)):
-        diagonal[i] = 1. / n_points * (t_coords[i] ** 2).dot(y * (1 - y))
-
-    return diagonal, full_matrix
 
 
 def classification_check(coords, labels, weights):
@@ -121,7 +125,8 @@ def classification_check(coords, labels, weights):
 
 def gradient_descent(train_coords, train_labels, test_coords, test_labels,
                      step_strength=0.1, momentum_step=0.0, decay_factor=0.0,
-                     newtonian=False, epochs=10000, batch_size=-1):
+                     newtonian=False, linesearch=False, epochs=10000, 
+                     batch_size=-1):
     """
     Function performing the method of gradient descent by initializing a random
     w and updating it according to the gradient (gradient_function) of the
@@ -152,6 +157,12 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     from training. The smaller the losses are, the better the training went.
     Should converge relative to the number of epochs.
     """
+    
+    # make sure we have a decay factor if one wants to use netwon method
+    while newtonian and decay_factor == 0.0:
+        print('You want to use the Netwon method')
+        decay_factor = float(input('Please give a non-zero decay-factor: ', end=''))
+    
     # initializing constants
     dw = np.zeros((RES_SQ + 1, 1))
     train_loss, test_loss = np.zeros(epochs), np.zeros(epochs)
@@ -181,11 +192,7 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             train_labels_sel = train_labels
 
         if newtonian:
-            # TODO: implement correctly. The assignment says to use the inverse
-            #  of the Hessian, but I do not know how to do this in the array
-            #  form that is used.
-            # take only diagonal elements of hessian to make it pseudo-newtonian
-            hessian_diagonal, hessian_matrix = hessian(w, train_coords, decay_factor)
+            hessian_matrix = hessian(w, train_coords, decay_factor)
             # hessian_inv = np.zeros((RESOLUTION, RESOLUTION))
             # The inverse of a diagonal matrix is 1 / these elements. Added a
             # very small number to prevent dividing by zero.
@@ -195,9 +202,16 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             # hessian_inv = np.asarray(hessian_inv).reshape(-1)
             hessian_inv = np.linalg.inv(hessian_matrix)
 
-            dw = - hessian_inv.dot(gradient_function(w, train_coords_sel,
+            dw = -hessian_inv.dot(gradient_function(w, train_coords_sel,
                                                      train_labels_sel,
                                                      decay_factor))
+        elif linesearch:
+            gradE = gradient_function(w, train_coords_sel, train_labels_sel, decay_factor)
+            print(np.shape(gradE), np.shape(w))
+            gamma_opt = float(minimize(linesearch_gradient_function, 0.0, \
+                                       args=(gradE, w, train_coords_sel, train_labels_sel, decay_factor)).x)
+            dw = -gamma_opt * gradE
+        
         else:
             dw = -step_strength \
                  * gradient_function(w, train_coords_sel, train_labels_sel,

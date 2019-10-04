@@ -14,9 +14,9 @@ import os
 from ml_functions import *
 
 # pick your path
-os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
-# os.chdir('/home/lvalst/Courses/Machine Learning/week4')
-# os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
+#os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+#os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
 
 # %% Importing data
@@ -90,7 +90,7 @@ values = np.linspace(1, n_steps, n_steps)
 eta = 0.3
 lab = 0.1
 
-testl, trainl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, step_strength=eta, decay_factor=lab, newtonian=True, epochs=n_steps)
+trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, linesearch=True, epochs=n_steps)
 
 
 #
@@ -286,3 +286,12 @@ plt.show()
 #                                                            batch_size=20)
 # plt.plot(values, train_loss_06, label='Etraining06')
 # plt.plot(values, test_loss_06, label='Etest06')
+
+# %% Test
+#from scipy.optimize import minimize
+#
+#def f(x, gamma):
+#    return (x-2)**2 + gamma
+#
+#a = minimize(f,5, args=(3))
+#print(a)
