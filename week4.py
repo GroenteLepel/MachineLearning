@@ -80,7 +80,7 @@ test_coords = np.insert(test_coords, 0, 1, axis=1)
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 100
+n_steps = 224
 values = np.linspace(1, n_steps, n_steps)
 # w = np.random.normal(0, 1. / 10, (RES_SQ+1, 1))
 
@@ -90,7 +90,7 @@ values = np.linspace(1, n_steps, n_steps)
 eta = 0.3
 lab = 0.1
 
-trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, linesearch=True, epochs=n_steps)
+trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, congrad_descent=True, epochs=n_steps)
 
 
 #
@@ -290,8 +290,8 @@ plt.show()
 # %% Test
 #from scipy.optimize import minimize
 #
-#def f(x, gamma):
-#    return (x-2)**2 + gamma
+#def f(x, gamma, beta):
+#    return (x-2)**2*beta + gamma**beta
 #
-#a = minimize(f,5, args=(3))
+#a = minimize(f,5, args=(3,3))
 #print(a)

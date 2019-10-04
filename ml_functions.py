@@ -24,7 +24,7 @@ def probability(x, w):
     return sigmoid(x.dot(w))
 
 
-def loss_function(weights, coords, label, decay_factor):
+def loss_function(weights, coords, labels, decay_factor):
     """
     Loss function which is the goal to be minimized.
     :param weights: weights connected to each x value
@@ -36,17 +36,27 @@ def loss_function(weights, coords, label, decay_factor):
     :return:
     """
     y = probability(coords, weights)
-    n_points = len(label)  # amount of data points
+    n_points = len(labels)  # amount of data points
     if decay_factor != 0.0:
         decay_term = decay_factor * np.sum(weights ** 2) / (2 * len(weights))
     else:
         decay_term = 0.0
     return float(
         -1. / n_points * (
-                np.transpose(label).dot((np.log(y + 1e-9)))
-                + np.transpose(1 - label).dot((np.log(1 - y)))
+                np.transpose(labels).dot((np.log(y + 1e-9)))
+                + np.transpose(1 - labels).dot((np.log(1 - y)))
         ) + decay_term
-    )
+    )           
+       
+        
+def linesearch_loss_function(gamma, d, weights, coords, labels, decay_factor):
+    """
+    For the line search method we need to minimize E(w+gamma*d) where d=-gradE.
+    To do this we wrote a function to return the above expression E(w+gamma*d).
+    We can minimize this function using scipy.optimize.minimize module
+    :return: E(w+gamma*d)
+    """
+    return loss_function(weights + gamma*d, coords, labels, decay_factor)
 
 
 def gradient_function(weights, coords, labels, decay_factor):
@@ -67,16 +77,6 @@ def gradient_function(weights, coords, labels, decay_factor):
     diff = (probability(coords, weights) - labels)
     return np.transpose(1. / n_points * np.transpose(diff).dot(coords)) \
            + decay_factor * weights / len(weights)
-           
-          
-def linesearch_gradient_function(gamma, gradE, weights, coords, labels, decay_factor):
-    """
-    For the line search method we need to minimize E(w+gamma*d) where d=-gradE.
-    To do this we wrote a function to return the above expression E(w+gamma*d).
-    We can minimize this function using scipy.optimize.minimize module
-    :return: E(w+gamma*d)
-    """
-    return gradient_function(weights - gamma*gradE, coords, labels, decay_factor)
 
 
 # TODO: implement
@@ -125,8 +125,8 @@ def classification_check(coords, labels, weights):
 
 def gradient_descent(train_coords, train_labels, test_coords, test_labels,
                      step_strength=0.1, momentum_step=0.0, decay_factor=0.0,
-                     newtonian=False, linesearch=False, epochs=10000, 
-                     batch_size=-1):
+                     newtonian=False, linesearch=False, congrad_descent=False,
+                     epochs=10000, batch_size=-1):
     """
     Function performing the method of gradient descent by initializing a random
     w and updating it according to the gradient (gradient_function) of the
@@ -177,8 +177,8 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
 
     time_start = time.time()
     for l in range(0, epochs):
-        if l % int(epochs / 4) == 0:
-            print('{0:d}% done.'.format(int(l / (epochs / 4) * 25)))
+        if 4*l % epochs == 0:
+            print('{0:d}% done.'.format(int(100*l / epochs)))
 
         if batch_size != -1:
             # If a batch size is given, create a batch of images from the total
@@ -191,6 +191,7 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             train_coords_sel = train_coords
             train_labels_sel = train_labels
 
+        gradE_prev = None
         if newtonian:
             hessian_matrix = hessian(w, train_coords, decay_factor)
             # hessian_inv = np.zeros((RESOLUTION, RESOLUTION))
@@ -205,13 +206,19 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             dw = -hessian_inv.dot(gradient_function(w, train_coords_sel,
                                                      train_labels_sel,
                                                      decay_factor))
-        elif linesearch:
+        elif linesearch or congrad_descent:
             gradE = gradient_function(w, train_coords_sel, train_labels_sel, decay_factor)
-            print(np.shape(gradE), np.shape(w))
-            gamma_opt = float(minimize(linesearch_gradient_function, 0.0, \
-                                       args=(gradE, w, train_coords_sel, train_labels_sel, decay_factor)).x)
-            dw = -gamma_opt * gradE
-        
+            if gradE_prev != None:
+                beta = np.inner((gradE - gradE_prev)[:,0],gradE[:,0]) / (len(gradE_prev))**2
+                d = -gradE + beta*d_prev
+            else:
+                d = -gradE
+            gamma_opt = float(minimize(linesearch_loss_function, 1e-4, \
+                                       args=(d, w, train_coords_sel, train_labels_sel, decay_factor) ).x)
+            dw = gamma_opt * d
+            if congrad_descent:
+                gradE_prev = gradE
+                d_prev = d
         else:
             dw = -step_strength \
                  * gradient_function(w, train_coords_sel, train_labels_sel,
