@@ -204,9 +204,10 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
             gradE = gradient_function(w, train_coords_sel, train_labels_sel,
                                       decay_factor)
             if gradE_prev != None:
-                beta = np.inner((gradE - gradE_prev)[:, 0], gradE[:, 0]) / (
-                    len(gradE_prev)) ** 2
+                beta = np.dot((gradE - gradE_prev)[:, 0], gradE[:, 0]) / (
+                    np.linalg.norm(gradE_prev)) ** 2
                 d = -gradE + beta * d_prev
+
             else:
                 d = -gradE
             gamma_opt = float(minimize(linesearch_loss_function, 1e-4,

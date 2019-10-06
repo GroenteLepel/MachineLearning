@@ -14,9 +14,9 @@ import os
 from ml_functions import *
 
 # pick your path
-#os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
-os.chdir('/home/lvalst/Courses/Machine Learning/week4')
-#os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
+os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+# os.chdir('/home/lvalst/Courses/Machine Learning/week4')
+# os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
 
 # %% Importing data
@@ -80,7 +80,7 @@ test_coords = np.insert(test_coords, 0, 1, axis=1)
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 224
+n_steps = 106
 values = np.linspace(1, n_steps, n_steps)
 # w = np.random.normal(0, 1. / 10, (RES_SQ+1, 1))
 
@@ -90,8 +90,9 @@ values = np.linspace(1, n_steps, n_steps)
 eta = 0.3
 lab = 0.1
 
-trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords, test_labels, congrad_descent=True, epochs=n_steps)
-
+trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords,
+                                    test_labels, congrad_descent=True,
+                                    epochs=n_steps)
 
 #
 # eta = 0.3
@@ -288,10 +289,10 @@ plt.show()
 # plt.plot(values, test_loss_06, label='Etest06')
 
 # %% Test
-#from scipy.optimize import minimize
+# from scipy.optimize import minimize
 #
-#def f(x, gamma, beta):
+# def f(x, gamma, beta):
 #    return (x-2)**2*beta + gamma**beta
 #
-#a = minimize(f,5, args=(3,3))
-#print(a)
+# a = minimize(f,5, args=(3,3))
+# print(a)
