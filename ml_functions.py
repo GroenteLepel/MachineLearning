@@ -46,9 +46,9 @@ def loss_function(weights, coords, labels, decay_factor):
                 np.transpose(labels).dot((np.log(y + 1e-9)))
                 + np.transpose(1 - labels).dot((np.log(1 - y)))
         ) + decay_term
-    )           
-       
-        
+    )
+
+
 def linesearch_loss_function(gamma, d, weights, coords, labels, decay_factor):
     """
     For the line search method we need to minimize E(w+gamma*d) where d=-gradE.
@@ -56,7 +56,7 @@ def linesearch_loss_function(gamma, d, weights, coords, labels, decay_factor):
     We can minimize this function using scipy.optimize.minimize module
     :return: E(w+gamma*d)
     """
-    return loss_function(weights + gamma*d, coords, labels, decay_factor)
+    return loss_function(weights + gamma * d, coords, labels, decay_factor)
 
 
 def gradient_function(weights, coords, labels, decay_factor):
@@ -79,7 +79,6 @@ def gradient_function(weights, coords, labels, decay_factor):
            + decay_factor * weights / len(weights)
 
 
-# TODO: implement
 def hessian(weights, coords, decay_factor):
     """
     Hessian information used to optimize finding a minimum in E
@@ -157,19 +156,20 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
     from training. The smaller the losses are, the better the training went.
     Should converge relative to the number of epochs.
     """
-    
+
     # make sure we have a decay factor if one wants to use netwon method
     while newtonian and decay_factor == 0.0:
         print('You want to use the Netwon method')
-        decay_factor = float(input('Please give a non-zero decay-factor: ', end=''))
-    
+        decay_factor = float(
+            input('Please give a non-zero decay-factor: ', end=''))
+
     # initializing constants
     dw = np.zeros((RES_SQ + 1, 1))
     train_loss, test_loss = np.zeros(epochs), np.zeros(epochs)
     indices = np.linspace(0, len(train_labels) - 1, len(train_labels),
                           dtype=int)
 
-    w = np.random.normal(0, 1. / np.sqrt(RES_SQ + 1), (RES_SQ+1, 1))
+    w = np.random.normal(0, 1. / np.sqrt(RES_SQ + 1), (RES_SQ + 1, 1))
 
     print('Starting gradient descent using eta={0:4.2f}, alpha={1:4.2f}, '
           'decay_factor={2:4.2f}.'
@@ -177,8 +177,8 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
 
     time_start = time.time()
     for l in range(0, epochs):
-        if 4*l % epochs == 0:
-            print('{0:d}% done.'.format(int(100*l / epochs)))
+        if 4 * l % epochs == 0:
+            print('{0:d}% done.'.format(int(100 * l / epochs)))
 
         if batch_size != -1:
             # If a batch size is given, create a batch of images from the total
@@ -194,27 +194,25 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
         gradE_prev = None
         if newtonian:
             hessian_matrix = hessian(w, train_coords, decay_factor)
-            # hessian_inv = np.zeros((RESOLUTION, RESOLUTION))
-            # The inverse of a diagonal matrix is 1 / these elements. Added a
-            # very small number to prevent dividing by zero.
-            # np.fill_diagonal(hessian_inv, 1 / (hessian_diagonal + 1e-2))
 
-            # convert hessian into an array to fit with our calculation method
-            # hessian_inv = np.asarray(hessian_inv).reshape(-1)
             hessian_inv = np.linalg.inv(hessian_matrix)
 
             dw = -hessian_inv.dot(gradient_function(w, train_coords_sel,
-                                                     train_labels_sel,
-                                                     decay_factor))
+                                                    train_labels_sel,
+                                                    decay_factor))
         elif linesearch or congrad_descent:
-            gradE = gradient_function(w, train_coords_sel, train_labels_sel, decay_factor)
+            gradE = gradient_function(w, train_coords_sel, train_labels_sel,
+                                      decay_factor)
             if gradE_prev != None:
-                beta = np.inner((gradE - gradE_prev)[:,0],gradE[:,0]) / (len(gradE_prev))**2
-                d = -gradE + beta*d_prev
+                beta = np.inner((gradE - gradE_prev)[:, 0], gradE[:, 0]) / (
+                    len(gradE_prev)) ** 2
+                d = -gradE + beta * d_prev
             else:
                 d = -gradE
-            gamma_opt = float(minimize(linesearch_loss_function, 1e-4, \
-                                       args=(d, w, train_coords_sel, train_labels_sel, decay_factor) ).x)
+            gamma_opt = float(minimize(linesearch_loss_function, 1e-4,
+                                       args=(
+                                       d, w, train_coords_sel, train_labels_sel,
+                                       decay_factor)).x)
             dw = gamma_opt * d
             if congrad_descent:
                 gradE_prev = gradE
@@ -226,11 +224,10 @@ def gradient_descent(train_coords, train_labels, test_coords, test_labels,
                  + momentum_step * dw
 
         w = w + dw
-        # print("lets overflow!")
+
         train_loss[l] = loss_function(w, train_coords_sel, train_labels_sel,
                                       decay_factor)
 
-        # print("lets overflow again!")
         test_loss[l] = loss_function(w, test_coords, test_labels,
                                      decay_factor)
 
