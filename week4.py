@@ -14,9 +14,9 @@ import os
 from ml_functions import *
 
 # pick your path
-os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+#os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 # os.chdir('/home/lvalst/Courses/Machine Learning/week4')
-# os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
+os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
 
 # %% Importing data
@@ -80,9 +80,9 @@ test_coords = np.insert(test_coords, 0, 1, axis=1)
 # %% Grad descent for different etas
 
 # declaring amount of steps and indicators for all the values.
-n_steps = 106
+n_steps=10000
 values = np.linspace(1, n_steps, n_steps)
-# w = np.random.normal(0, 1. / 10, (RES_SQ+1, 1))
+w = np.random.normal(0, 1. / 10, (RES_SQ+1, 1))
 
 # Hdiag, Hmat = hessian(w, train_coords, 0.1)
 # np.linalg.inv(Hmat)
@@ -90,32 +90,33 @@ values = np.linspace(1, n_steps, n_steps)
 eta = 0.3
 lab = 0.1
 
-trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords,
+trainl, testl, w3 = gradient_descent(train_coords, train_labels, test_coords,
                                     test_labels, congrad_descent=True,
                                     epochs=n_steps)
 
 #
-# eta = 0.3
-# train_loss_03, test_loss_03 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                step_strength=eta,
-#                                                epochs=n_steps)
+eta = 0.3
+train_loss_03, test_loss_03,w3 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               step_strength=eta,
+                                               epochs=n_steps,momentum_step=0.5
+                                               ,decay_factor=0.1)
 # # We find that the Testloss had a minimum value around 6500 epochs. Going to
 # # 10.000 results in overfitting. Thus for this eta=0.3 we would suggest using
 # # around 6500 epochs. Now we look at what happens when we use different eta
 #
 #
-# eta = 0.9
-# train_loss_09, test_loss_09 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                step_strength=eta,
-#                                                epochs=n_steps)
+eta = 0.9
+train_loss_09, test_loss_09,w9 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               step_strength=eta,
+                                               epochs=n_steps)
 #
-# eta = 0.1
-# train_loss_01, test_loss_01 = gradient_descent(train_coords, train_labels,
-#                                                test_coords, test_labels,
-#                                                step_strength=eta,
-#                                                epochs=n_steps)
+eta = 0.1
+train_loss_01, test_loss_01,w1 = gradient_descent(train_coords, train_labels,
+                                               test_coords, test_labels,
+                                               step_strength=eta,
+                                               epochs=n_steps)
 #
 #
 # # %% Momentum
@@ -235,11 +236,11 @@ trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords,
 # %% Plotting
 # TODO: write away this data into a text file and plot using a different python
 #  script.
-# plt.plot(values, train_loss_03, label='Etraining03')
-# plt.plot(values, test_loss_03, label='Etest03')
-#
-# plt.plot(values, train_loss_09, label='Etraining09')
-# plt.plot(values, test_loss_09, label='Etest09')
+plt.plot(values, train_loss_03, label='Etraining03')
+plt.plot(values, test_loss_03, label='Etest03')
+##
+#plt.plot(values, train_loss_09, label='Etraining09')
+#plt.plot(values, test_loss_09, label='Etest09')
 #
 # plt.plot(values, train_loss_01, label='Etraining01')
 # plt.plot(values, test_loss_01, label='Etest01')
@@ -251,8 +252,8 @@ trainl, testl, w = gradient_descent(train_coords, train_labels, test_coords,
 # plt.plot(values, test_loss_05, label='Etest05 (mom, weighted)')
 
 
-plt.plot(values, trainl, label='Etraining (newt)')
-plt.plot(values, testl, label='Etest (newt)')
+#plt.plot(values, trainl, label='Etraining (newt)')
+#plt.plot(values, testl, label='Etest (newt)')
 
 # # plt.yscale('log')
 # # plt.xscale('log')
