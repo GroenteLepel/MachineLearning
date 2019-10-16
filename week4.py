@@ -12,9 +12,12 @@ import scipy.io
 import matplotlib.pyplot as plt
 import os
 from ml_functions import *
+import csv
 
 # pick your path
 #os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+# os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+os.chdir('/Users/daniel/Documents/CDSMachineLearning')
 # os.chdir('/home/lvalst/Courses/Machine Learning/week4')
 os.chdir('/Users/laurens/Programmeren/CDS: Machine learning/MachineLearning')
 
@@ -45,7 +48,7 @@ test_labels = np.zeros(len(indextest))
 # manipulating data to boolean values instead of 3 or 7
 # TODO: only every label that needs to be 0 can be changed, since Ttrain_new
 #  already is an array of zeros.
-# TODO: remove the damned for-loop.
+# TODO: remove the for-loop.
 
 for i, x in enumerate(indextrain):
     if train_labels_raw[x] == 3:
@@ -63,7 +66,6 @@ for i, x in enumerate(indextest):
 
 # reshaping 28x28 matrices to one long array of 784 entries
 # each row now is a data point and each column the dimension
-#  TODO: x_0 must be added here to prevent bias.
 train_coords = np.transpose(np.reshape(train_coords,
                                        (RES_SQ, len(train_labels))))
 test_coords = np.transpose(np.reshape(test_coords,
@@ -73,6 +75,7 @@ test_labels = test_labels.reshape(len(test_labels), 1)
 
 del train_coords_raw, test_coords_raw, train_labels_raw, test_labels_raw
 del indextest, indextrain
+
 # put a 1 in front for each datapoint (this is the x_0 coordinate)
 train_coords = np.insert(train_coords, 0, 1, axis=1)
 test_coords = np.insert(test_coords, 0, 1, axis=1)
@@ -232,6 +235,19 @@ train_loss_01, test_loss_01,w1 = gradient_descent(train_coords, train_labels,
 
 # After 10 iterations, Etrain = 0.10, Etest = 0.14, so way to high. something
 # is wrong...
+=======
+lab = 0.1
+
+# %%Newtonian
+n_steps = 100
+values = np.linspace(1, n_steps, n_steps)
+trainl_n, testl_n, w_n = gradient_descent(train_coords, train_labels,
+                                          test_coords,
+                                          test_labels, decay_factor=lab,
+                                          newtonian=True, epochs=n_steps)
+
+train_n_class = classification_check(train_coords, train_labels, w_n)
+test_n_class = classification_check(test_coords, test_labels, w_n)
 
 # %% Plotting
 # TODO: write away this data into a text file and plot using a different python
@@ -260,40 +276,88 @@ plt.plot(values, test_loss_03, label='Etest03')
 #
 plt.title('Entropy versus epochs for grad descent')
 plt.xlabel('epochs')
+
+plt.plot(values, trainl_n, label=r'$E_{train}$')
+plt.plot(values, testl_n, label=r'$E_{test}$')
+
+plt.title('Newtonian Gradient Descent')
+plt.xlabel('iterations')
 plt.ylabel('entropy')
 plt.legend()
-plt.savefig('grad_descent.png')
-plt.show()
+plt.savefig('newtonian.png')
+# plt.show()
+plt.clf()
 
-# %% Extras
-## calculate time elapsed for one grad calculation
-# time_start = time.clock()
-# grad(w,Xtrain_new,Ttrain_new) #Testing if it works #Testing if it works
-# print((time.clock() - time_start))
-#
-## find minimum of testloss
-# print(int(np.where(Testloss==min(Testloss))[0]))
+# %% Line Search
 
-# %% Stochastic gradient descent
+n_steps = 224
+values = np.linspace(1, n_steps, n_steps)
+trainl_ls, testl_ls, w_ls = gradient_descent(train_coords, train_labels,
+                                             test_coords, test_labels,
+                                             decay_factor=lab, linesearch=True,
+                                             epochs=n_steps)
 
-# n_steps = 10000
-# values = np.linspace(1, n_steps, n_steps)
-#
-# eta = 0.3
-# train_loss_06, test_loss_06, weights_06 = gradient_descent(train_coords,
-#                                                            train_labels,
-#                                                            test_coords,
-#                                                            test_labels,
-#                                                            eta, epochs=n_steps,
-#                                                            batch_size=20)
-# plt.plot(values, train_loss_06, label='Etraining06')
-# plt.plot(values, test_loss_06, label='Etest06')
+train_ls_class = classification_check(train_coords, train_labels, w_ls)
+test_ls_class = classification_check(test_coords, test_labels, w_ls)
 
-# %% Test
-# from scipy.optimize import minimize
-#
-# def f(x, gamma, beta):
-#    return (x-2)**2*beta + gamma**beta
-#
-# a = minimize(f,5, args=(3,3))
-# print(a)
+plt.plot(values, trainl_ls, label=r'$E_{train}$')
+plt.plot(values, testl_ls, label=r'$E_{test}$')
+
+plt.title('Line Search')
+plt.xlabel('iterations')
+plt.ylabel('entropy')
+plt.legend()
+plt.savefig('linesearch.png')
+# plt.show()
+plt.clf()
+
+# %% Conjugate
+
+n_steps = 106
+values = np.linspace(1, n_steps, n_steps)
+trainl_cd, testl_cd, w_cd = gradient_descent(train_coords, train_labels,
+                                             test_coords, test_labels,
+                                             decay_factor=lab,
+                                             congrad_descent=True,
+                                             epochs=n_steps)
+
+train_cd_class = classification_check(train_coords, train_labels, w_cd)
+test_cd_class = classification_check(test_coords, test_labels, w_cd)
+
+# %%
+plt.plot(values, trainl_cd, label=r'$E_{train}$')
+plt.plot(values, testl_cd, label=r'$E_{test}$')
+
+plt.title('Conjugate Gradient Descent')
+plt.xlabel('iterations')
+plt.ylabel('entropy')
+plt.legend()
+plt.savefig('congraddescent.png')
+# plt.show()
+plt.clf()
+
+# %% Stochastic Gradient Descent
+n_steps = 10000
+values = np.linspace(1, n_steps, n_steps)
+trainl_st, testl_st, w_st = gradient_descent(train_coords, train_labels,
+                                             test_coords, test_labels,
+                                             decay_factor=lab,
+                                             batch_size=1000,
+                                             epochs=n_steps)
+
+train_st_class = classification_check(train_coords, train_labels, w_st)
+test_st_class = classification_check(test_coords, test_labels, w_st)
+
+# %%
+plt.plot(values, trainl_st, label=r'$E_{train}$')
+plt.plot(values, testl_st, label=r'$E_{test}$')
+
+plt.title(r'Stochastic Gradient Descent ($N = 1000$')
+plt.xlabel('iterations')
+plt.ylabel('entropy')
+plt.legend()
+plt.savefig('stochastic.png')
+# plt.show()
+plt.clf()
+
+
