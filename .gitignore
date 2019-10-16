@@ -1,3 +1,5 @@
+*.png
+
 # PyCharm files
 *.xml
 .idea/
