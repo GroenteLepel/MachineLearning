@@ -10,8 +10,8 @@ import numpy as np
 import math as m
 import pandas as pd
 import seaborn as sns
-from sympy.stats import *
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 os.chdir('/Users/laurens/Programmeren/CDS: Machine learning')
 data=pd.read_csv('datayag.csv', sep=';', engine='python')
 
@@ -26,10 +26,8 @@ Y=(Yraw-np.mean(Yraw))/(np.std(Yraw))
 
 plt.plot(X,Y,'o')
 plot.show()
-XY=np.zeros(len(X))
-for i in range(0,len(X)):
-    XY[i]=1
-    
+
+
 
 mu1=[-1,1]
 mu2=[1,-1]
@@ -40,6 +38,46 @@ pi2=0.5
 r1=np.zeros(len(X))
 r2=np.zeros(len(X))
 from scipy.stats import multivariate_normal
-for i in range(0,len(X)):
-    r1[i]=pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)/(pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)+pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2))
-    r2[i]=pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2)/(pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)+pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2))
+#%% 
+mu1=[-1,1]
+mu2=[1,-1]
+S1=np.array([[1,0],[0,1]])
+S2=np.array([[1,0],[0,1]])
+pi1=0.5
+pi2=0.5
+r1=np.zeros(len(X))
+r2=np.zeros(len(X))
+Niterations=5
+for j in range(0,Niterations):
+    Snew1=np.array([[0,0],[0,0]])
+    Snew2=np.array([[0,0],[0,0]])
+    for i in range(0,len(X)):
+        r1[i]=pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)/(pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)+pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2))
+        r2[i]=pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2)/(pi1*multivariate_normal.pdf((X[i],Y[i]), mean=mu1, cov=S1)+pi2*multivariate_normal.pdf((X[i],Y[i]), mean=mu2, cov=S2))
+        Snew1=Snew1+r1[i]*np.array([[X[i]-mu1[0]],[Y[i]-mu1[1]]])*np.array([X[i]-mu1[0],Y[i]-mu1[1]])
+        Snew2=Snew2+r2[i]*np.array([[X[i]-mu2[0]],[Y[i]-mu2[1]]])*np.array([X[i]-mu2[0],Y[i]-mu2[1]])
+    mu1[0]=np.sum(r1*X)/np.sum(r1)
+    mu1[1]=np.sum(r1*Y)/np.sum(r1)
+    mu2[0]=np.sum(r2*X)/np.sum(r2)
+    mu2[1]=np.sum(r2*Y)/np.sum(r2)
+    S1=Snew1
+    S2=Snew2
+    pi1=np.mean(r1)
+    pi2=np.mean(r2)
+    print('step',j+1)
+    plt.scatter(X,Y,cmap='seismic',c=r1)
+    plt.show()
+
+
+
+#%%
+fig = plt.figure()
+ax = fig.add_subplot(111, aspect='auto')
+w,v=np.linalg.eig(S1)
+index = np.where(w == np.max(w))
+alpha=np.arctan(v[1][index]/v[0][index])
+major,minor=2*np.sqrt(5.991*w[0]),2*np.sqrt(5.991*w[1])
+ellipse = Ellipse(mu1,minor,major,angle=alpha)
+ax.add_patch(ellipse)
+ax.scatter(X,Y,cmap='seismic',c=r1)
+fig.show()
