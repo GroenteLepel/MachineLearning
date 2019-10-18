@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 from scipy.stats import multivariate_normal
 
 os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
@@ -25,47 +26,110 @@ def read_faithful():
     return data[-2:]
 
 
-def initialize_em(x_data):
-    means = np.array([[-1, 1], [1, -1]])
+def initialize_em():
+    means = np.array([[-1., 1.], [1., -1.]])
+    covariance_mat = np.array([[[1., 0.], [0., 1.]],
+                               [[1., 0.], [0., 1.]]])
     pi = np.array([0.5, 0.5])
-    covariance_mat = np.array([[[1, 0], [0, 1]],
-                                 [[1, 0], [0, 1]]])
-    responsibilities = np.zeros((2, len(x_data)))
 
-    return means, pi, covariance_mat, responsibilities
+    return means, covariance_mat, pi
 
 
-def e_step(x_data, y_data, weights, mean_data, cov_data):
-    numerator = \
-        weights[0] * multivariate_normal.pdf((x_data, y_data),
-                                             mean=mean_data[0],
-                                             cov=cov_data[0])
+def e_step(data, pi_values, means, covariances):
+    # TODO: find a better and more elegant way to do this.
+    numerator_1 = \
+        pi_values[0] * multivariate_normal.pdf(np.transpose(data),
+                                               mean=means[0],
+                                               cov=covariances[0])
+    numerator_2 = \
+        pi_values[1] * multivariate_normal.pdf(np.transpose(data),
+                                               mean=means[1],
+                                               cov=covariances[1])
     denominator = \
-        weights[0] * multivariate_normal.pdf((x_data, y_data),
-                                             mean=mean_data[0],
-                                             cov=cov_data[0]) \
-        + weights[1] * multivariate_normal.pdf((x_data, y_data),
-                                               mean=mean_data[1],
-                                               cov=cov_data[1])
+        pi_values[0] * multivariate_normal.pdf(np.transpose(data),
+                                               mean=means[0],
+                                               cov=covariances[0]) \
+        + pi_values[1] * multivariate_normal.pdf(np.transpose(data),
+                                                 mean=means[1],
+                                                 cov=covariances[1])
 
-def plot_faithful(x_data, y_data):
+    resp_1 = numerator_1 / denominator
+    resp_2 = numerator_2 / denominator
+
+    if (resp_1 + resp_2).any() != 1:
+        print("!!probabilities do not sum up to one.!!")
+
+    return resp_1, resp_2
+
+
+def m_step(data, resp):
+    n_responsible = np.array([0, 0])
+
+    n_responsible[0] = (resp[0] > 0.5).sum().astype(float)
+    n_responsible[1] = (resp[1] >= 0.5).sum().astype(float)
+
+    if n_responsible[0] + n_responsible[1] != len(resp[0]):
+        print("amount of poopies do not count up, is {0:d}, should be {1:d}"
+              .format(n_responsible[0] + n_responsible[1], len(resp)))
+
+    mu_new, covariance_new, pi_new = initialize_em()
+
+    # TODO: these for loops can be change to a matrix multiplication of some
+    #  sort.
+    for i in range(len(mu_new)):
+        for j in range(len(mu_new[0])):
+            mu_new[i][j] = resp[i].dot(data[j]) / n_responsible[i]
+
+    for i in range(len(covariance_new)):
+        covariance_new[i] = (resp * (data - mu_new[i][:, None])) \
+                                .dot(np.transpose(data - mu_new[i][:, None])) \
+                            / n_responsible[i]
+
+    for i in range(len(pi_new)):
+        pi_new[i] = n_responsible[i] / len(resp)
+
+    return mu_new, covariance_new, pi_new
+
+
+def plot_faithful(data, resp_data, means, covariance):
     fig, ax = plt.subplots(1, 1)
 
-    ax.scatter(x_data, y_data)
+    edgecolors = ['red', 'blue']
+
+    for i in range(len(resp_data)):
+        lambda_, v = np.linalg.eig(covariance[i])
+        lambda_ = np.sqrt(lambda_)
+
+        ell = Ellipse(xy=means[i],
+                      width=lambda_[0] / np.sqrt(2), height=lambda_[1],
+                      angle=np.rad2deg(np.arccos(v[0, 0])),
+                      facecolor='none',
+                      edgecolor=edgecolors[i], linewidth=3)
+
+        ax.add_artist(ell)
+
+    ax.scatter(data[0], data[1], c=resp_data[0], cmap='bwr', vmin=0, vmax=1)
+
+    ax.set_xlim([-2, 2])
+    ax.set_ylim([-2, 2])
 
     fig.show()
 
 
 # %% Main
 
-x, y = read_faithful()
+dat = read_faithful()
 
-plot_faithful(x, y)
+mu, cov, pi = initialize_em()
+plot_faithful(dat, np.zeros((2, len(dat[0]))), mu, cov)
 
-mu, pi, cov, r = initialize_em(x)
+# Calculate the responsibilities for that each gaussian has for the data points
+# according to their means mu and covariance matrix cov
+r = e_step(dat, pi, mu, cov)
+plot_faithful(dat, r, mu, cov)
+mu, cov, pi = m_step(dat, r)
 
-iterations = 1
-# for i in range(iterations):
-#     cov_new = np.zeros(np.shape(cov))
-#
-#     for j in range(len(x)):
+for i in range(5):
+    r = e_step(dat, pi, mu, cov)
+    mu, cov, pi = m_step(dat, r)
+plot_faithful(dat, r, mu, cov)
