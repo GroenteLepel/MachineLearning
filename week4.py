@@ -15,7 +15,6 @@ from ml_functions import *
 import csv
 
 # pick your path
-#os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 # os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
 os.chdir('/Users/daniel/Documents/CDSMachineLearning')
 # os.chdir('/home/lvalst/Courses/Machine Learning/week4')
