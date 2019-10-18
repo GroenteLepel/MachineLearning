@@ -28,8 +28,11 @@ def read_faithful():
 
 def initialize_em():
     means = np.array([[-1., 1.], [1., -1.]])
-    covariance_mat = np.array([[[1., 0.], [0., 1.]],
-                               [[1., 0.], [0., 1.]]])
+    covariance_mat = np.array([[[1., 0.],
+                                [0., 1.]],
+
+                               [[1., 0.],
+                                [0., 1.]]])
     pi = np.array([0.5, 0.5])
 
     return means, covariance_mat, pi
@@ -59,18 +62,11 @@ def e_step(data, pi_values, means, covariances):
     if (resp_1 + resp_2).any() != 1:
         print("!!probabilities do not sum up to one.!!")
 
-    return resp_1, resp_2
+    return np.array([resp_1, resp_2])
 
 
 def m_step(data, resp):
-    n_responsible = np.array([0, 0])
-
-    n_responsible[0] = (resp[0] > 0.5).sum().astype(float)
-    n_responsible[1] = (resp[1] >= 0.5).sum().astype(float)
-
-    if n_responsible[0] + n_responsible[1] != len(resp[0]):
-        print("amount of poopies do not count up, is {0:d}, should be {1:d}"
-              .format(n_responsible[0] + n_responsible[1], len(resp)))
+    n_responsible = resp.sum(axis=1)
 
     mu_new, covariance_new, pi_new = initialize_em()
 
@@ -129,7 +125,11 @@ r = e_step(dat, pi, mu, cov)
 plot_faithful(dat, r, mu, cov)
 mu, cov, pi = m_step(dat, r)
 
-for i in range(5):
+for i in range(100):
     r = e_step(dat, pi, mu, cov)
     mu, cov, pi = m_step(dat, r)
+
+    if i % 10 == 0:
+        plot_faithful(dat, r, mu, cov)
+
 plot_faithful(dat, r, mu, cov)
