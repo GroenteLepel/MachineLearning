@@ -171,5 +171,5 @@ for i in range(n_steps):
     r = e_step(faithful_data, pi, mu, cov)
 
     if i != 0 and i % int(n_steps / n_plots) == 0:
-        print("plot at step {0:d}".format(i))
+        print("plot at step {0:d}".format(i+1))
         plot_faithful(faithful_data, r, mu, cov, iterator=(i+1))
