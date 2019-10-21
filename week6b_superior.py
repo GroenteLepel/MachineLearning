@@ -28,9 +28,9 @@ def read_faithful():
 
 
 def initialize_em():
-    means = np.array([[-1., 1.],  # k = 1
+    means = np.array([[-1.5, 1.],  # k = 1
 
-                      [1., -1.]])  # k = 2
+                      [1.5, -1.]])  # k = 2
 
     covariance_mat = np.array([[[1., 0.],  # k = 1
                                 [0., 1.]],
@@ -99,12 +99,12 @@ def m_step(data, resp):
             mu_new[i][j] = resp[i].dot(data[j]) / n_responsible[i]
 
     for i in range(len(covariance_new)):
-        covariance_new[i] = (resp * (data - mu_new[i][:, None])) \
+        covariance_new[i] = (resp[i] * (data - mu_new[i][:, None])) \
                                 .dot(np.transpose(data - mu_new[i][:, None])) \
                             / n_responsible[i]
 
-    for i in range(len(pi_new)):
-        pi_new[i] = n_responsible[i] / len(resp)
+        for i in range(len(pi_new)):
+            pi_new[i] = n_responsible[i] / len(resp)
 
     return mu_new, covariance_new, pi_new
 
