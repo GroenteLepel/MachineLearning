@@ -37,7 +37,6 @@ def initialize_em():
 
                                [[1., 0.],  # k = 2
                                 [0., 1.]]])
-    covariance_mat *= 0.05
 
     pi = np.array([0.5,  # k = 1
 
@@ -57,7 +56,6 @@ def e_step(data, pi_values, means, covariances):
     :param covariances:
     :return: updated responsibility values in an array.
     """
-    # TODO: find a better and more elegant way to do this.
     numerator_1 = \
         pi_values[0] * multivariate_normal.pdf(np.transpose(data),
                                                mean=means[0],
@@ -103,33 +101,50 @@ def m_step(data, resp):
                                 .dot(np.transpose(data - mu_new[i][:, None])) \
                             / n_responsible[i]
 
-        for i in range(len(pi_new)):
-            pi_new[i] = n_responsible[i] / len(resp)
+    for i in range(len(pi_new)):
+        pi_new[i] = n_responsible[i] / len(resp)
 
     return mu_new, covariance_new, pi_new
 
 
-def plot_faithful(data, resp_data, means, covariance):
+def plot_faithful(data, resp_data, means, covariance, iterator=0):
     fig, ax = plt.subplots(1, 1)
+    plt.rcParams.update({'font.size': 18})
 
     edgecolors = ['red', 'blue']
 
     for i in range(len(resp_data)):
         lambda_, v = np.linalg.eig(covariance[i])
         lambda_ = np.sqrt(lambda_)
+        width, height = 2 * lambda_[0] / np.sqrt(2), 2 * lambda_[1]
+        lw = 5
 
         ell = Ellipse(xy=means[i],
-                      width=lambda_[0] / np.sqrt(2), height=lambda_[1],
+                      width=width, height=height,
                       angle=np.rad2deg(np.arccos(v[0, 0])),
                       facecolor='none',
-                      edgecolor=edgecolors[i], linewidth=3)
+                      edgecolor=edgecolors[i], linewidth=lw,
+                      zorder=2)
 
+        ell_outline = Ellipse(xy=means[i],
+                              width=width, height=height,
+                              angle=np.rad2deg(np.arccos(v[0, 0])),
+                              facecolor='none',
+                              edgecolor='white', linewidth=2.5 * lw,
+                              zorder=1)
+
+        ax.add_artist(ell_outline)
         ax.add_artist(ell)
 
     ax.scatter(data[0], data[1], c=resp_data[0], cmap='bwr', vmin=0, vmax=1)
 
+    if iterator != 0:
+        ax.text(-1.5, 1.5, r'$L = {0:d}$'.format(iterator))
+
     ax.set_xlim([-2, 2])
     ax.set_ylim([-2, 2])
+    plt.xticks([-2, -1, 0, 1, 2])
+    plt.yticks([-2, -1, 0, 1, 2])
 
     fig.show()
 
@@ -149,12 +164,12 @@ r = e_step(faithful_data, pi, mu, cov)
 plot_faithful(faithful_data, r, mu, cov)
 
 # Update in loops
-n_steps = 50
-n_plots = 6
+n_steps = 10
+n_plots = 3
 for i in range(n_steps):
     mu, cov, pi = m_step(faithful_data, r)
     r = e_step(faithful_data, pi, mu, cov)
 
     if i != 0 and i % int(n_steps / n_plots) == 0:
         print("plot at step {0:d}".format(i))
-        plot_faithful(faithful_data, r, mu, cov)
+        plot_faithful(faithful_data, r, mu, cov, iterator=(i+1))
