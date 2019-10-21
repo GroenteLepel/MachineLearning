@@ -108,8 +108,8 @@ def m_step(data, resp):
 
 
 def plot_faithful(data, resp_data, means, covariance, iterator=0):
-    fig, ax = plt.subplots(1, 1)
     plt.rcParams.update({'font.size': 18})
+    fig, ax = plt.subplots(1, 1)
 
     edgecolors = ['red', 'blue']
 
