@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from scipy.stats import multivariate_normal
 
-os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+# os.chdir('C:/Users/Daniël/iCloudDrive/Documents/CDSMachineLearning')
+os.chdir('/Users/daniel/Documents/CDSMachineLearning')
 
 
 # %% Functions
@@ -27,18 +28,35 @@ def read_faithful():
 
 
 def initialize_em():
-    means = np.array([[-1., 1.], [1., -1.]])
-    covariance_mat = np.array([[[1., 0.],
+    means = np.array([[-1., 1.],  # k = 1
+
+                      [1., -1.]])  # k = 2
+
+    covariance_mat = np.array([[[1., 0.],  # k = 1
                                 [0., 1.]],
 
-                               [[1., 0.],
+                               [[1., 0.],  # k = 2
                                 [0., 1.]]])
-    pi = np.array([0.5, 0.5])
+    covariance_mat *= 0.05
+
+    pi = np.array([0.5,  # k = 1
+
+                   0.5])  # k = 2
 
     return means, covariance_mat, pi
 
 
 def e_step(data, pi_values, means, covariances):
+    """
+    Evaluate the responsibilities using the current parameter values (i. e.
+    updates the colors of the data points to coincide with the overlayed
+    gaussians).
+    :param data: X and Y coordinates of data points to be clustered.
+    :param pi_values:
+    :param means:
+    :param covariances:
+    :return: updated responsibility values in an array.
+    """
     # TODO: find a better and more elegant way to do this.
     numerator_1 = \
         pi_values[0] * multivariate_normal.pdf(np.transpose(data),
@@ -49,12 +67,7 @@ def e_step(data, pi_values, means, covariances):
                                                mean=means[1],
                                                cov=covariances[1])
     denominator = \
-        pi_values[0] * multivariate_normal.pdf(np.transpose(data),
-                                               mean=means[0],
-                                               cov=covariances[0]) \
-        + pi_values[1] * multivariate_normal.pdf(np.transpose(data),
-                                                 mean=means[1],
-                                                 cov=covariances[1])
+        numerator_1 + numerator_2
 
     resp_1 = numerator_1 / denominator
     resp_2 = numerator_2 / denominator
@@ -66,8 +79,17 @@ def e_step(data, pi_values, means, covariances):
 
 
 def m_step(data, resp):
+    """
+    Re-estimates the parameters using the current responsibilities (i. e.
+    updates the gaussians).
+    :param data: X and Y coordinates of data points to be clustered.
+    :param resp: array of responsibilities for each data point.
+    :return: Updated mu, covariance matrix and pi values.
+    """
+    # Sum up all the responsibility values for each gaussian k.
     n_responsible = resp.sum(axis=1)
 
+    # Initialise the mu, cov and pi which are to be updated.
     mu_new, covariance_new, pi_new = initialize_em()
 
     # TODO: these for loops can be change to a matrix multiplication of some
@@ -114,22 +136,25 @@ def plot_faithful(data, resp_data, means, covariance):
 
 # %% Main
 
-dat = read_faithful()
+# Read data.
+faithful_data = read_faithful()
 
+# Initialize the gaussians.
 mu, cov, pi = initialize_em()
-plot_faithful(dat, np.zeros((2, len(dat[0]))), mu, cov)
+# Plot the gaussians and data to show how it is initialized.
+plot_faithful(faithful_data, np.zeros((2, len(faithful_data[0]))), mu, cov)
+# Calculate the responsibilities for the gaussians belonging to each data point.
+r = e_step(faithful_data, pi, mu, cov)
+# Show this in a plot.
+plot_faithful(faithful_data, r, mu, cov)
 
-# Calculate the responsibilities for that each gaussian has for the data points
-# according to their means mu and covariance matrix cov
-r = e_step(dat, pi, mu, cov)
-plot_faithful(dat, r, mu, cov)
-mu, cov, pi = m_step(dat, r)
+# Update in loops
+n_steps = 50
+n_plots = 6
+for i in range(n_steps):
+    mu, cov, pi = m_step(faithful_data, r)
+    r = e_step(faithful_data, pi, mu, cov)
 
-for i in range(100):
-    r = e_step(dat, pi, mu, cov)
-    mu, cov, pi = m_step(dat, r)
-
-    if i % 10 == 0:
-        plot_faithful(dat, r, mu, cov)
-
-plot_faithful(dat, r, mu, cov)
+    if i != 0 and i % int(n_steps / n_plots) == 0:
+        print("plot at step {0:d}".format(i))
+        plot_faithful(faithful_data, r, mu, cov)
