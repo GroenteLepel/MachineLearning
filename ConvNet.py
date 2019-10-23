@@ -1,6 +1,5 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import tensorflow as tf
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 from tensorflow.keras import datasets, layers, models
 import matplotlib.pyplot as plt
@@ -27,13 +26,13 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-history = model.fit(train_images, train_labels, epochs=10, validation_data=(test_images, test_labels))
-test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+history = model.fit(train_images, train_labels, epochs=10,
+                    validation_data=(test_images, test_labels))
+test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
 plt.plot(history.history['acc'], label='accuracy')
-plt.plot(history.history['val_acc'], label = 'val_accuracy')
+plt.plot(history.history['val_acc'], label='val_accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
 plt.legend(loc='lower right')
-
