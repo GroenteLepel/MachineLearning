@@ -25,10 +25,12 @@ model.summary()
 model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
-
+time_start = time.time()
 history = model.fit(train_images, train_labels, epochs=10,
                     validation_data=(test_images, test_labels))
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
+
+
 
 plt.plot(history.history['acc'], label='accuracy')
 plt.plot(history.history['val_acc'], label='val_accuracy')
