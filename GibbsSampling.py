@@ -1,5 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
+# %% Description of the exercise
 # Implement Gibbs sampling for the inference of a single one-dimensional
 # Gaussian which we studied using maximuml ikelihood in section22.1. Assign a
 # broad Gaussian prior toand a broad gamma prior (24.2) to the precision
@@ -19,3 +21,26 @@ import numpy as np
 # You use the mean and variance to
 
 # Derive the conditionals from the first section on the wiki-page.
+
+# %% Trying to work it out
+# The mean is sampled from a gaussian. The mean for this gaussian is fixed.
+fixed_mean = 0
+
+# Initialize parameters for gamma function from which stdev is sampled.
+shape_param = 7.5
+scale_param = 1.0
+
+# Derive a mean from a gamma distribution, and variance from a normal
+#  distribution
+sample_size = int(1e5)
+mean_samples = np.zeros(sample_size)
+stdev_samples = np.zeros(sample_size)
+for i in range(sample_size):
+    stdev_samples[i] = np.random.gamma(shape_param, scale_param)
+    mean_samples[i] = np.random.normal(fixed_mean, stdev_samples[i])
+
+plt.scatter(mean_samples, stdev_samples, marker='.')
+plt.title('Mean vs Standard deviation samples')
+plt.xlabel('Mean')
+plt.ylabel('Standard deviation')
+plt.show()
