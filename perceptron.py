@@ -13,23 +13,27 @@ import time
 train_images, test_images = train_images / 255.0, test_images / 255.0
 
 # Create the convolutional base
-n_hidden = 0
-epochs = 500
+n_hidden = 1
+n_nodes1 = 2000
+# n_nodes2 = 750
+epochs = 600
+batch = 5000
 model = models.Sequential()
 model.add(layers.Flatten())
-model.add(layers.Dense(150, activation='relu'))
-model.add(layers.Dropout(0.2))
-# model.add(layers.Dense(25, activation='relu'))
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(n_nodes1, activation='relu'))
+model.add(layers.Dropout(0.3))
+# model.add(layers.Dense(n_nodes2, activation='relu'))
 model.add(layers.Dense(10, activation='softmax'))
 
 time_start = time.time()
-model.compile(optimizer='adam',
+model.compile(optimizer='nadam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
 history = model.fit(train_images, train_labels, epochs=epochs,
                     validation_data=(test_images, test_labels),
-                    batch_size=1000)
+                    batch_size=batch)
 
 test_loss, test_acc = model.evaluate(test_images, test_labels)
 print('done in {0:3.2f} seconds'.format(time.time() - time_start))
@@ -48,7 +52,10 @@ def plot_history():
     ax[1].plot(history.history['acc'], label="train data")
     ax[1].plot(history.history['val_acc'], label="test data")
 
-    fig.savefig("1hlayers150_dropout02_500epochs_1000batchsize.png")
+    fig.savefig("{0:d}hlayers{1:d}_{2:d}epochs_{3:d}batchsize_dropout0503_nadam.png".format(
+        n_hidden, n_nodes1, epochs, batch))
+
+    fig.show()
 
 
 plot_history()
