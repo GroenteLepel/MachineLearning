@@ -34,12 +34,12 @@ scale_param = 1.0
 #  distribution
 sample_size = int(1e5)
 mean_samples = np.zeros(sample_size)
-stdev_samples = np.zeros(sample_size)
+beta_samples = np.zeros(sample_size)
 for i in range(sample_size):
-    stdev_samples[i] = np.random.gamma(shape_param, scale_param)
-    mean_samples[i] = np.random.normal(fixed_mean, stdev_samples[i])
+    beta_samples[i] = np.random.gamma(shape_param, scale_param)
+    mean_samples[i] = np.random.normal(fixed_mean, 1/np.sqrt(beta_samples[i]))
 
-plt.scatter(mean_samples, stdev_samples, marker='.')
+plt.scatter(mean_samples, 1/np.sqrt(beta_samples), marker='.')
 plt.title('Mean vs Standard deviation samples')
 plt.xlabel('Mean')
 plt.ylabel('Standard deviation')
