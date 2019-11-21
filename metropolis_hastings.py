@@ -13,16 +13,15 @@ def metropolis_hastings(p):
     samples = np.zeros(2)
 
     x_star, y_star = np.array([x, y]) + np.random.normal(size=2)
-    if np.random.rand() < p(x_star, y_star) / p(x, y):
-        x, y = x_star, y_star
-    samples[i] = np.array([x, y])
+    if (accept(p, normal_dist, np.array([x_star, y_star]), np.array([x, y]))):
+        samples = np.array([x, y])
 
     return samples
     # ============================
     # end copy paste
 
 
-def acceptance(p, q, sample_x, current_state):
+def accept(p, q, sample_x, current_state):
     """
     Calculate the accaptence ratio between sample_x x' and current_state x
     according to the distributions p and q, and returns the proper parameter
@@ -36,6 +35,8 @@ def acceptance(p, q, sample_x, current_state):
         p(current_state) * q(sample_x, current_state)
 
     if a >= 1:
-        return sample_x
+        return True
+    elif np.random.rand() <= a:
+        return True
     else:
-        return current_state
+        return False
