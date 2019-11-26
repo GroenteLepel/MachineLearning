@@ -1,11 +1,14 @@
 from p_star_distribution import p_star_distribution
 import numpy as np
 from metropolis_hastings import metropolis_hastings
+import seaborn as sns
 import matplotlib.pyplot as plt
 import functools
 
-w1 = np.random.normal(size=3)
-w2 = np.random.normal(size=3)
+
+def circle(x):
+    return x[0] ** 2 + x[1] ** 2
+
 
 x = np.array([
     [1, 2, 3],
@@ -22,30 +25,16 @@ x = np.array([
 
 t = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
 
-w = np.arange(-10, 10, 0.5)
+# samples = metropolis_hastings(circle, n_dims=2, n_points=10000)
 
-w_samples = metropolis_hastings(functools.partial(p_star_distribution, x, t), n_points=5000)
+samples = metropolis_hastings(functools.partial(p_star_distribution, x, t),
+                                n_points=100000)
 
+sns.jointplot(samples[:, 0], samples[:, 1])
+plt.show()
 
-# %%
-def line(x, w0, w1, w2):
-    return -(w1 * x + w0) / w2
+plt.plot(samples[:, 0])
+plt.plot(samples[:, 1])
+plt.plot(samples[:, 2])
 
-
-points = np.linspace(2, 9, 1000)
-fig, ax = plt.subplots(1, 3, figsize=(20, 5))
-
-ax[0].plot(w_samples[:, 0], label='w1')
-ax[0].plot(w_samples[:, 1], label='w2')
-ax[0].plot(w_samples[:, 2], label='w3')
-
-ax[0].legend()
-
-ax[1].scatter(w_samples[:, 1], w_samples[:, 2])
-
-ax[2].scatter(x[:, 1], x[:, 2], c=t)
-# ax[2].plot(points,
-#            line(points, w_samples[-1, 0], w_samples[-1, 1], w_samples[-1, 2]),
-#            lw=5)
-
-fig.show()
+plt.show()
