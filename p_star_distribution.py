@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def p_star_distribution(weights, data, labels, alpha=0.01):
+def p_star_distribution(data, labels, weights, alpha=0.01):
     return np.exp(- objective_function(weights, data, labels, alpha))
 
 

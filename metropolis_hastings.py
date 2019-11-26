@@ -13,7 +13,7 @@ def normal(x, mean):
            (np.sqrt(2 * np.pi) ** 3)
 
 
-def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
+def metropolis_hastings(p, n_points=1000, n_dims=3):
     """
     Method for sampling data from a distribution p
     :param p: distribution to sample using this method
@@ -31,7 +31,7 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
         new_x = x + np.random.normal(size=n_dims)
 
         counter = 0
-        while not accept(p, normal, new_x, x, data, labels):
+        while not accept(p, normal, new_x, x):
             new_x = x + np.random.normal(size=n_dims)
             counter += 1
             if counter == 1000:
@@ -45,7 +45,7 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
     return samples
 
 
-def accept(p, q, sample_x, current_state, data, labels):
+def accept(p, q, sample_x, current_state):
     """
     Calculate the accaptence ratio between sample_x x' and current_state x
     according to the distributions p and q, and returns the proper parameter
@@ -56,8 +56,8 @@ def accept(p, q, sample_x, current_state, data, labels):
     :return:
     """
 
-    a = p(sample_x, data, labels) * q(current_state, sample_x) / \
-        (p(current_state, data, labels) * q(sample_x, current_state))
+    a = p(sample_x) * q(current_state, sample_x) / \
+        (p(current_state) * q(sample_x, current_state))
 
     if a >= 1:
         return True

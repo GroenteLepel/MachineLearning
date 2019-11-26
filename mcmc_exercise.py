@@ -2,7 +2,7 @@ from p_star_distribution import p_star_distribution
 import numpy as np
 from metropolis_hastings import metropolis_hastings
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import functools
 
 w1 = np.random.normal(size=3)
 w2 = np.random.normal(size=3)
@@ -24,7 +24,7 @@ t = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
 
 w = np.arange(-10, 10, 0.5)
 
-w_samples = metropolis_hastings(p_star_distribution, x, t, n_points=5000)
+w_samples = metropolis_hastings(functools.partial(p_star_distribution, x, t), n_points=5000)
 
 
 # %%
