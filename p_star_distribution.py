@@ -19,7 +19,6 @@ def error_function(weights, data, labels):
 
 
 def logistic(data, weights):
-    b = np.dot(weights, data.transpose())
     return 1 / (1 + np.exp(- np.dot(weights, data.transpose())))
 
 
