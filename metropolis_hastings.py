@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import multivariate_normal
+from p_star_distribution import objective_function
 
 
 def normal(x, mean=0):
@@ -12,7 +13,7 @@ def normal(x, mean=0):
            (np.sqrt(2 * np.pi) ** 3)
 
 
-def metropolis_hastings(p, n_points=1000, n_dims=3):
+def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
     """
     Method for sampling data from a distribution p
     :param p: distribution to sample using this method
@@ -27,16 +28,30 @@ def metropolis_hastings(p, n_points=1000, n_dims=3):
     for i in range(n_points):
         if i % (n_points / 4) == 0:
             print(i)
-        new_x = x + np.random.normal(size=n_dims)
+        new_x = x + np.random.normal(size=n_dims, scale=0.1)
 
         counter = 0
-        if accept(p, normal, new_x, x):
+        if accept_exponent(objective_function, data, labels, new_x, x):
             samples[i] = new_x
             x = new_x
         else:
             samples[i] = x
 
     return samples
+
+
+def accept_exponent(f, data, labels, sample_x, current_state):
+    # TODO: Remove this ugly specific implementation.
+    difference = f(sample_x, data, labels, 0.01) - f(current_state, data,
+                                                     labels, 0.01)
+    a = np.exp(- difference)
+
+    if a >= 1:
+        return True
+    elif np.random.rand() <= a:
+        return True
+    else:
+        return False
 
 
 def accept(p, q, sample_x, current_state):

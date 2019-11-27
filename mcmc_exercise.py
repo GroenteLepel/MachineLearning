@@ -27,10 +27,12 @@ t = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
 
 # samples = metropolis_hastings(circle, n_dims=2, n_points=10000)
 
-samples = metropolis_hastings(functools.partial(p_star_distribution, x, t),
-                                n_points=30000)
+samples = metropolis_hastings(functools.partial(p_star_distribution, x, t), x,
+                              t,
+                              n_points=5000)
 
-sns.jointplot(samples[:, 0], samples[:, 1])
+remove_first = 1000
+sns.jointplot(samples[remove_first:, 1], samples[remove_first:, 2])
 plt.show()
 
 plt.plot(samples[:, 0])
