@@ -16,9 +16,9 @@ def error_function(weights, data, labels):
     #  exponents, and remove this ugly adjustment of y.
     decrease_y = y == 1
     increase_y = y == 0
-    y[increase_y] += 1e-5
-    y[decrease_y] -= 1e-5
-    return - np.dot(labels, np.log(y)) + np.dot((1 - labels), np.log(1 - y))
+    y[increase_y] += 1e-9
+    y[decrease_y] -= 1e-9
+    return -(np.dot(labels, np.log(y)) + np.dot((1 - labels), np.log(1 - y)))
 
 
 def logistic(data, weights):
