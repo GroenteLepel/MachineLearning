@@ -48,13 +48,13 @@ class IsingOptimiser:
     def _generate_spin_state(self):
         return np.random.choice([-1, 1], size=(self.n,))
 
-    # def neighbour_state(self, index):
-    #     new_state[index] *= -1
+    def flip_state(self, i):
+        self.state[i] *= -1
 
     def ising_energy(self):
-        return -0.5 * self.state * self.weights * self.state.transpose()
+        return -0.5 * np.dot(self.state, np.dot(self.weights, self.state))
 
     def iterative_improvement(self):
         cost = self.ising_energy()
 
-        new_state = self.state
+
