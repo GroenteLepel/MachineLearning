@@ -1,5 +1,5 @@
 import random
-from itertools import permutations
+from itertools import combinations
 
 import numpy as np
 
@@ -15,6 +15,7 @@ Theory
 
 
 class IsingOptimiser:
+    np.random.seed(4)
 
     def __init__(self, n=100, frustrated=True):
         """
@@ -58,55 +59,19 @@ class IsingOptimiser:
     def ising_energy(self):
         return -0.5 * np.dot(self.state, np.dot(self.weights, self.state))
 
-    # def check_Emin(self, states_to_flip, indices_to_flip):
-    #     indices_not_flipped = [x for x in np.linspace(self.n) if x not in indices_to_flip]
-    #     for index in indices_not_flipped:
-    #         indices_to_flip += [index]
-    #         check_Emin(self, states_to_flip-1, indices_to_flip)
-    #
-    #         old_energy = self.ising_energy()
-    #         for i in indices_to_flip:
-    #             self.flip_state(i)
-    #             if old_energy > self.ising_energy():
-    #                 # Lower energy achieved, end search.
-    #
-    #                 return True
-    #             # Flip back to the previous state where the energy was better.
-    #             self.flip_state(i)
-    #
-    # def find_neighbourhood(self, state, size):
-    #     for i in range(1, size + 1):
-    #         new_state = check_Emin(self.state, i)
-
     def iterative_improvement(self, neighbourhood=3):
         old_cost = self.ising_energy()
         indices = np.arange(self.n)
 
-        if neighbourhood > 1:
-            returni self.iterative_improvement(neighbourhood=neighbourhood-1)
+        for n_flips in range(1, neighbourhood + 1):
+            np.random.shuffle(indices)
+            flip_combs_dummy = list(combinations(indices, n_flips))
+            flip_combs = [np.array(x) for x in flip_combs_dummy]
 
-        if neighbourhood > 1:
-            perms_iter = permutations(indices, neighbourhood)
-            perms = [np.array(x) for x in list(perms_iter)]
-        else:
-            perms = indices
-
-        random.shuffle(perms)
-
-        for p in perms:
-            # p is of class tuple. In order to do things with it, we need to
-            #  make it an array.
-            p_arr = np.array(p)
-            self.flip_state(p_arr)
-            if self.ising_energy() < old_cost:
-                # self.flip_reg[p_arr] = True
-                return True
-            else:
-                # This state does not make it better, reverse the flip.
-                self.flip_state(p_arr)
+            for flip_comb in flip_combs:
+                self.flip_state(flip_comb)
+                if self.ising_energy() < old_cost:
+                    return True
+                self.flip_state(flip_comb)
 
         return False
-
-
-
-
