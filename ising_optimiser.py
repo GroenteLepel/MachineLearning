@@ -13,6 +13,46 @@ Theory
   - What are the advantages of each method? (or what do you expect)
 """
 
+def metropolis_hastings(n_points, n_dims=3):
+    """
+    Method for sampling data from a distribution p
+    :param p: distribution to sample using this method
+    :param n_points: amount of points you want to sample from distribution p
+    :param n_dims: amount of dimensions of the points which are sampled
+    :return: array with shape (n_points, n_dims)
+    """
+
+    samples = np.zeros((n_points, n_dims))
+    x = np.zeros(n_dims)
+
+    for i in range(n_points):
+        if i % (n_points / 4) == 0:
+            print(i)
+        new_x = x + np.random.normal(size=n_dims, scale=0.1)
+
+        counter = 0
+        if accept_exponent(objective_function, data, labels, new_x, x):
+            samples[i] = new_x
+            x = new_x
+        else:
+            samples[i] = x
+
+    return samples
+
+
+def accept_exponent(f, data, labels, sample_x, current_state):
+    # TODO: Remove this ugly specific implementation.
+    difference = f(sample_x, data, labels, 0.01) - f(current_state, data,
+                                                     labels, 0.01)
+    a = np.exp(- difference)
+
+    if a >= 1:
+        return True
+    elif np.random.rand() <= a:
+        return True
+    else:
+        return False
+
 
 class IsingOptimiser:
     np.random.seed(4)
@@ -75,3 +115,21 @@ class IsingOptimiser:
                 self.flip_state(flip_comb)
 
         return False
+
+    def p_simulated_annealing(self, beta):
+        return np.exp(-beta * self.ising_energy())
+    
+    def metropolis_hastings(self, beta, n_points):
+        samples = np.zeros(n_points)
+        
+        index = 0
+        while samples[-1] == 0:
+            new_sample = self._generate_spin_state()
+            
+            difference = p_simulated_annealing()
+            
+            index += 1
+        
+
+    def simulated_annealing(self, beta_init = 0.0091, markov_chain_length = 2000, n_betas = 450):
+        beta_list = 1.01 * np.logspace(1, n_betas, base = beta_init)    
