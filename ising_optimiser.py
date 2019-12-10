@@ -13,7 +13,6 @@ Theory
 
 
 class IsingOptimiser:
-    np.random.seed(4)
 
     def __init__(self, n=100, frustrated=True):
         """
@@ -99,7 +98,7 @@ class IsingOptimiser:
     #
     #         index += 1
 
-    def estimate_max_energy_diff(self, neighbourhood=1):
+    def estimate_max_energy_diff(self, neighbourhood):
         """
         Estimate the max energy difference of the ising model system based on
         the amount of spins that are flipped.
@@ -116,21 +115,32 @@ class IsingOptimiser:
         :return:
         """
         max_e_diff = 0
-        # TODO: implement this function.
+        initial_energy = self.ising_energy()
+        for i in range(100):
+            combination = np.random.choice(self.n, neighbourhood, replace=False)
+            self.flip_state(combination)
+            new_energy = self.ising_energy()
+            new_e_diff = np.abs(new_energy - initial_energy)
+            if max_e_diff < new_e_diff:
+                max_e_diff = new_e_diff
+            initial_energy = new_energy
+
+        print("Estimated max e diff:")
+        print(max_e_diff)
         return max_e_diff
 
     def simulated_annealing(self, neighbourhood,
-                            length_markov_chain=1000, n_betas=450, ):
+                            length_markov_chain=2000, n_betas=1000):
         """
         Copy-paste of simulated annealing method delivered to us in the
         exercise. By no means is this a good bit of code. Improve.
         TODO:
           [x] rename parameters so it is actually readable
-          [ ] implement the estimate_max_energy_diff code (and come up with a
+          [x] implement the estimate_max_energy_diff code (and come up with a
               better name for this function)
           [ ] optimise the while loop so increments do not take place inside the
               loop (enumerate, itertools?)
-          [ ] run and test.
+          [x] run and test.
         :param neighbourhood:
         :param length_markov_chain:
         :param n_betas:
@@ -138,15 +148,15 @@ class IsingOptimiser:
         """
         # beta_list = 1.01 * np.logspace(1, n_betas, base=beta_init)
 
-        initial_energy = self.ising_energy()
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
         stdev_energies = np.zeros(n_betas)  # Stores std energy at each beta
 
         # Estimate the maximum dE for a certain spin flip
-        max_de = self.estimate_max_energy_diff(neighbourhood)
-        beta_init = 1 / max_de  # sets initial temperature
+        # max_de = self.estimate_max_energy_diff(neighbourhood)
+        # beta_init = 1 / max_de  # sets initial temperature
+        beta_init = 0.0091
 
-        factor = 1.05  # increment of beta at each new chain
+        factor = 1.01  # increment of beta at each new chain
 
         t_count = 0
         stdev_energies[t_count] = 1
@@ -158,18 +168,34 @@ class IsingOptimiser:
             # Initialise energy_array
             energy_array = np.zeros(length_markov_chain)
 
-            for t1 in length_markov_chain:
-                flip_combinations = self.generate_flip_combinations(
-                    neighbourhood)
-                # Choose new x by flipping to new neighbourhood
-                # Perform metropolis hastings step
+            for t1 in range(length_markov_chain):
+                comb = np.random.choice(self.n, neighbourhood, replace=False)
 
-                # E1 is energy of new state
-                energy_array[t1] = initial_energy
+                # Choose new x by flipping to new neighbourhood
+                current_energy = self.ising_energy()
+                self.flip_state(comb)
+                candidate_energy = self.ising_energy()
+
+                # Perform metropolis hastings step
+                if not self.accept(beta, current_energy, candidate_energy):
+                    self.flip_state(comb)
+
+                energy_array[t1] = self.ising_energy()
 
             mean_energies[t_count] = np.mean(energy_array)
             stdev_energies[t_count] = np.std(energy_array)
-            print(t_count, beta,
-                  mean_energies[t_count], stdev_energies[t_count])
+            # print(t_count, beta,
+            #       mean_energies[t_count], stdev_energies[t_count])
 
-        return energy_array, mean_energies, stdev_energies
+        return t_count, mean_energies, stdev_energies
+
+    def accept(self, beta, current, candidate):
+        difference = candidate - current
+        a = np.exp(- beta * difference)
+
+        if a >= 1:
+            return True
+        elif np.random.rand() <= a:
+            return True
+        else:
+            return False
