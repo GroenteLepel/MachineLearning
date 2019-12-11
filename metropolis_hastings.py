@@ -31,7 +31,8 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
         new_x = x + np.random.normal(size=n_dims, scale=0.1)
 
         counter = 0
-        if accept_exponent(objective_function, data, labels, new_x, x):
+        if accept_exponent(current=objective_function(x, data, labels, 0.01),
+                           candidate=objective_function(new_x, data, labels, 0.01)):
             samples[i] = new_x
             x = new_x
         else:
@@ -40,11 +41,9 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
     return samples
 
 
-def accept_exponent(f, data, labels, sample_x, current_state):
-    # TODO: Remove this ugly specific implementation.
-    difference = f(sample_x, data, labels, 0.01) - f(current_state, data,
-                                                     labels, 0.01)
-    a = np.exp(- difference)
+def accept_exponent(current, candidate, factor=1):
+    difference = candidate - current
+    a = np.exp(- factor * difference)
 
     if a >= 1:
         return True
