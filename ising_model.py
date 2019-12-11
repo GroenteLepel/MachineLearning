@@ -77,6 +77,4 @@ class IsingModel:
             if new_e_diff > max_e_diff:
                 max_e_diff = new_e_diff
 
-        print("Estimated max e diff:")
-        print(max_e_diff)
         return max_e_diff
