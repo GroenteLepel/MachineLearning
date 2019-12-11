@@ -1,3 +1,4 @@
+import copy
 from itertools import combinations
 
 import numpy as np
@@ -62,16 +63,19 @@ class IsingModel:
         :param neighbourhood:
         :return:
         """
+        assert neighbourhood <= self.n, "Value of neighbourhood exceeds the amount of spins in the state."
+
         max_e_diff = 0
         initial_energy = self.ising_energy()
-        for i in range(100):
+        neighbour = copy.deepcopy(self)
+
+        for i in range(int(self.n / 2)):
             combination = np.random.choice(self.n, neighbourhood, replace=False)
-            self.flip_state(combination)
-            new_energy = self.ising_energy()
+            neighbour.flip_state(combination)
+            new_energy = neighbour.ising_energy()
             new_e_diff = np.abs(new_energy - initial_energy)
-            if max_e_diff < new_e_diff:
+            if new_e_diff > max_e_diff:
                 max_e_diff = new_e_diff
-            initial_energy = new_energy
 
         print("Estimated max e diff:")
         print(max_e_diff)
