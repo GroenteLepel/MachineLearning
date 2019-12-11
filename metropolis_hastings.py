@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.stats import multivariate_normal
 from p_star_distribution import objective_function
 
 
