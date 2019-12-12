@@ -1,5 +1,8 @@
-from itertools import combinations
+import copy
+
 import numpy as np
+from ising_model import IsingModel
+from metropolis_hastings import accept_exponent
 
 """
 Combinatoric optimisation
@@ -14,7 +17,7 @@ Theory
 
 class IsingOptimiser:
 
-    def __init__(self, n=100, frustrated=True):
+    def __init__(self, ising_model: IsingModel, neighbourhood: int):
         """
         Initialise the class and all its parameters at once. These can be used
         throughout the class by calling them via self.x, with x the parameter
@@ -23,179 +26,104 @@ class IsingOptimiser:
         :param frustrated: indicates if we are dealing with a frustrated system
         or not (i.e. if w is only > 0 or if there are values < 0 as well.
         """
-        self.n = n
-        self.frustrated = frustrated
-        self.flip_reg = np.zeros(self.n, dtype=bool)
+        self.im = ising_model
+        self.neighbourhood = neighbourhood
 
-        self.weights = self._generate_matrix()
-        self.state = self._generate_spin_state()
+    def optimise(self, method: str):
+        switcher = {
+            "iter": lambda: self._optimise_iteratively(),
+            "sa": lambda: self._simulated_annealing()
+        }
+        method = switcher.get(method, lambda: "No proper method given")
+        return method()
 
-    def _generate_matrix(self):
-        # Generate a nxn matrix, we chose normal distribution
-        # TODO: explain why we chose normal distribution.
-        w = np.random.normal(size=(self.n, self.n))
+    def _optimise_iteratively(self):
+        print("Optimising iteratively.")
+        while self._iterative_improvement_found():
+            pass
 
-        # Make it symmetric, and normalise
-        w += w.transpose()
-        w /= 2
+    def _iterative_improvement_found(self):
+        """
+        Check all possible combinations of spin flips in the given
+        neighbourhood of the optimiser, and returns True if one of these
+        combinations contains a lower ising energy than the previous model.
+        Returns false if none of the combinations result in a lower energy (
+        i.e. a minimum is found).
 
-        # Set diagonal to zero, no spin interactions with itself
-        np.fill_diagonal(w, 0)
+        :return: boolean
+        """
+        old_cost = self.im.ising_energy()
 
-        if not self.frustrated:
-            w[w < 0] *= -1
-
-        return w
-
-    def _generate_spin_state(self):
-        return np.random.choice([-1, 1], size=(self.n,))
-
-    def flip_state(self, i):
-        self.state[i] *= -1
-
-    def generate_flip_combinations(self, neighbourhood):
-        indices = np.arange(self.n)
-        np.random.shuffle(indices)
-        flip_combs_iterator = list(combinations(indices, neighbourhood))
-        flip_combinations = [np.array(x) for x in flip_combs_iterator]
-
-        return flip_combinations
-
-    def ising_energy(self):
-        return -0.5 * np.dot(self.state, np.dot(self.weights, self.state))
-
-    def iterative_improvement(self, neighbourhood=3):
-        old_cost = self.ising_energy()
-
-        for n_flips in range(1, neighbourhood + 1):
-            flip_combinations = self.generate_flip_combinations(n_flips)
+        for n_flips in range(1, self.neighbourhood + 1):
+            flip_combinations = self.im.generate_flip_combinations(n_flips)
 
             for flip_comb in flip_combinations:
-                self.flip_state(flip_comb)
-                if self.ising_energy() < old_cost:
+                self.im.flip_state(flip_comb)
+                if self.im.ising_energy() < old_cost:
                     return True
-                self.flip_state(flip_comb)
+                self.im.flip_state(flip_comb)
 
         return False
 
-    def energy_distribution(self, beta):
-        """
-        probability density (not normalised) to sample from using metropolis
-        hastings.
-        :param beta:
-        :return:
-        """
-        return np.exp(-beta * self.ising_energy())
-
-    # def metropolis_hastings(self, beta, n_points):
-    #     samples = np.zeros(n_points)
-    #
-    #     index = 0
-    #     while samples[-1] == 0:
-    #         new_sample = self._generate_spin_state()
-    #
-    #         difference = p_simulated_annealing()
-    #
-    #         index += 1
-
-    def estimate_max_energy_diff(self, neighbourhood):
-        """
-        Estimate the max energy difference of the ising model system based on
-        the amount of spins that are flipped.
-
-        It is called "estimate", so we figured how we would do it is as
-        follows:
-        - generate all possible combinations of spin flips in the max
-         neighbourhood, since this has the highest probability of containing
-         the largest energy difference (?)
-        - calculate the first i energies of these combinations
-        - pick the max difference
-
-        :param neighbourhood:
-        :return:
-        """
-        max_e_diff = 0
-        initial_energy = self.ising_energy()
-        for i in range(100):
-            combination = np.random.choice(self.n, neighbourhood, replace=False)
-            self.flip_state(combination)
-            new_energy = self.ising_energy()
-            new_e_diff = np.abs(new_energy - initial_energy)
-            if max_e_diff < new_e_diff:
-                max_e_diff = new_e_diff
-            initial_energy = new_energy
-
-        print("Estimated max e diff:")
-        print(max_e_diff)
-        return max_e_diff
-
-    def simulated_annealing(self, neighbourhood,
-                            length_markov_chain=2000, n_betas=1000):
+    def _simulated_annealing(self,
+                             length_markov_chain=2000, n_betas=1000):
         """
         Copy-paste of simulated annealing method delivered to us in the
         exercise. By no means is this a good bit of code. Improve.
+
         TODO:
-          [x] rename parameters so it is actually readable
-          [x] implement the estimate_max_energy_diff code (and come up with a
-              better name for this function)
           [ ] optimise the while loop so increments do not take place inside the
               loop (enumerate, itertools?)
-          [x] run and test.
-        :param neighbourhood:
+
         :param length_markov_chain:
         :param n_betas:
         :return:
         """
-        # beta_list = 1.01 * np.logspace(1, n_betas, base=beta_init)
+        print("Optimising using simulated annealing.")
 
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
         stdev_energies = np.zeros(n_betas)  # Stores std energy at each beta
 
-        # Estimate the maximum dE for a certain spin flip
-        # max_de = self.estimate_max_energy_diff(neighbourhood)
-        # beta_init = 1 / max_de  # sets initial temperature
-        beta_init = 0.0091
-
+        # Estimate the maximum dE for flipping into a certain neighbourhood
         factor = 1.01  # increment of beta at each new chain
+        max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
+        beta_init = 1 / max_de  # sets initial temperature
+        beta_list = beta_init * np.logspace(1, n_betas,
+                                            num=n_betas, base=factor)
 
+        # Check energy of current state
+        current_energy = self.im.ising_energy()
         t_count = 0
         stdev_energies[t_count] = 1
-        beta = beta_init
         while stdev_energies[t_count] > 0:
-            # increment
             t_count += 1
-            beta *= factor
+            if t_count % 100 == 0:
+                print(t_count)
+
             # Initialise energy_array
-            energy_array = np.zeros(length_markov_chain)
+            tmp_energy_array = np.zeros(length_markov_chain)
 
-            for t1 in range(length_markov_chain):
-                comb = np.random.choice(self.n, neighbourhood, replace=False)
+            for i in range(length_markov_chain):
+                # Generate a combination of size neighbourhood to flip the spins
+                comb = np.random.choice(self.im.n, self.neighbourhood,
+                                        replace=False)
 
-                # Choose new x by flipping to new neighbourhood
-                current_energy = self.ising_energy()
-                self.flip_state(comb)
-                candidate_energy = self.ising_energy()
+                # Generate a candidate new state
+                candidate_im = copy.deepcopy(self.im)
+                candidate_im.flip_state(comb)
+                candidate_energy = candidate_im.ising_energy()
 
-                # Perform metropolis hastings step
-                if not self.accept(beta, current_energy, candidate_energy):
-                    self.flip_state(comb)
+                # Check if new candidate state is accepted according to
+                #  metropolis hastings
+                if accept_exponent(current_energy, candidate_energy,
+                                   factor=beta_list[t_count]):
+                    self.im = candidate_im
+                    current_energy = candidate_energy
 
-                energy_array[t1] = self.ising_energy()
+                tmp_energy_array[i] = current_energy
 
-            mean_energies[t_count] = np.mean(energy_array)
-            stdev_energies[t_count] = np.std(energy_array)
-            # print(t_count, beta,
-            #       mean_energies[t_count], stdev_energies[t_count])
+            mean_energies[t_count] = np.mean(tmp_energy_array)
+            stdev_energies[t_count] = np.std(tmp_energy_array)
 
-        return t_count, mean_energies, stdev_energies
-
-    def accept(self, beta, current, candidate):
-        difference = candidate - current
-        a = np.exp(- beta * difference)
-
-        if a >= 1:
-            return True
-        elif np.random.rand() <= a:
-            return True
-        else:
-            return False
+        return t_count, beta_list[:t_count], \
+               mean_energies[:t_count], stdev_energies[:t_count]
