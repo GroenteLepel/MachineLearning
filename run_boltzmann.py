@@ -9,11 +9,12 @@ Advanced Machine Learning @ Radboud University
 
 #%% Import modules & defining constants
 from ising_model import IsingModel
-from boltzmann import boltzmann_optimiser
+import boltzmann
 
 N = 10
 
 
 #%% Main
-im = IsingModel(10, True)
-boltzmann_optimiser(im)
+im = IsingModel(N, frustrated = True, threshold = True)
+states = boltzmann.generate_state_set(im,5)
+print(boltzmann.LLH(im,states))
