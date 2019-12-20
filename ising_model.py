@@ -2,6 +2,7 @@ import copy
 from itertools import combinations
 import numpy as np
 
+
 class IsingModel:
 
     def __init__(self, n: int, frustrated: bool, threshold: bool):
@@ -12,8 +13,8 @@ class IsingModel:
         self.coupling_matrix = self._generate_matrix()
         self.threshold_vector = self._generate_thresholds()
         self.state = self._generate_spin_state()
-        
-        self.normalisation_constant = self._find_normalisation_constant()
+
+        # self.normalisation_constant = self._find_normalisation_constant()
 
     def _generate_matrix(self):
         # Generate a nxn matrix, we chose normal distribution
@@ -31,34 +32,34 @@ class IsingModel:
             w[w < 0] *= -1
 
         return w
-    
+
     def _generate_thresholds(self):
         # Generate a threshold vector for the Boltzmann-Gibbs distribution
         if self.threshold:
             return np.random.uniform(-1.0, 1.0, size=(self.n,))
         else:
-            return np.zeros(size=(self.n,))
+            return np.zeros((self.n,))
 
     def _generate_spin_state(self):
         return np.random.choice([-1, 1], size=(self.n,))
-    
+
     def _find_normalisation_constant(self):
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
         dummy = copy.deepcopy(self)
         dummy.state = np.ones(self.n)
-        
+
         normalisation_constant = np.exp(-dummy.ising_energy())
         for k in range(1, self.n + 1):
-            # We want to loop through all possible spin configurations of length n
-            # To do this I use all flip combinations possible of length 1-n
-            # No flips (thus state [1,1,1,..]) is already calculated at
-            # initialisation of the normalisation constant
+            # We want to loop through all possible spin configurations of
+            # length n To do this I use all flip combinations possible of
+            # length 1-n No flips (thus state [1,1,1,..]) is already
+            # calculated at initialisation of the normalisation constant
             flip_combinations = self.generate_flip_combinations(k)
             for flip_combination in flip_combinations:
                 dummy.state = np.ones(self.n)
                 dummy.state[flip_combination] *= -1
                 normalisation_constant += np.exp(-dummy.ising_energy())
-        
+
         return normalisation_constant
 
     def flip_state(self, i):
@@ -73,10 +74,12 @@ class IsingModel:
         return flip_combinations
 
     def ising_energy(self):
-        return -0.5 * np.dot(self.state, np.dot(self.coupling_matrix, self.state)) - np.dot(self.threshold_vector, self.state)
+        return -0.5 * np.dot(self.state,
+                             np.dot(self.coupling_matrix, self.state)) - np.dot(
+            self.threshold_vector, self.state)
 
     def p(self):
-        return 1./self.normalisation_constant * np.exp(-self.ising_energy())
+        return 1. / self.normalisation_constant * np.exp(-self.ising_energy())
 
     def estimate_max_energy_diff(self, neighbourhood):
         """
