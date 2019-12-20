@@ -6,9 +6,13 @@ Created on Tue Dec 10 14:34:25 2019
 @author: Laurens, Ludo, Daniël
 
 """
+
+#%% Importing modules
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+#%% Initializing distributions
 p = np.zeros((3,3,3))
 
 p[:,:,0] =[[0.0057,    0.0103,    0.0561],
@@ -28,6 +32,7 @@ p[:,:,2] = [[0.0296,    0.0276,    0.0379],
 q_xy = np.ones((3,3)) / 9
 q_z =  np.ones(3) / 3
 
+#%% Defining functions
 def KL(Q_xy, Q_z, P):
     
     'Calculating the KL divergence between our approximate q and p' 
@@ -40,6 +45,7 @@ def KL(Q_xy, Q_z, P):
     return KL
 
 
+#%% Main algo
 Delta_KL = 5
 KLs = [KL(q_xy, q_z, p)]
 
