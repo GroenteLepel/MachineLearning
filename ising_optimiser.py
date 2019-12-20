@@ -27,7 +27,11 @@ class IsingOptimiser:
         or not (i.e. if w is only > 0 or if there are values < 0 as well.
         """
         self.im = ising_model
+        self.init_im = copy.deepcopy(ising_model)
         self.neighbourhood = neighbourhood
+
+    def reset(self):
+        self.im = copy.deepcopy(self.init_im)
 
     def optimise(self, method: str):
         switcher = {
@@ -38,7 +42,7 @@ class IsingOptimiser:
         return method()
 
     def _optimise_iteratively(self):
-        print("Optimising iteratively.")
+        # print("Optimising iteratively.")
         while self._iterative_improvement_found():
             pass
 
