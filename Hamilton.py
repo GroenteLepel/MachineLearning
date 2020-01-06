@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import numpy as np
-from p_star_distribution import *
+from week_2.p_star_distribution import *
 """
 Created on Tue Nov 26 14:45:41 2019
 

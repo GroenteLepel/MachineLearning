@@ -11,7 +11,7 @@ Assignment: Boltzmann
 
 #%% Importing modules
 import numpy as np
-from ising_model import IsingModel
+from week_3.ising_model import IsingModel
 import copy
 
 

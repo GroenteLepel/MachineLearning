@@ -1,5 +1,5 @@
 import numpy as np
-from p_star_distribution import objective_function
+from week_2.p_star_distribution import objective_function
 
 
 def normal(x, mean=0):

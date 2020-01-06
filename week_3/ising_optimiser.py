@@ -1,8 +1,8 @@
 import copy
 
 import numpy as np
-from ising_model import IsingModel
-from metropolis_hastings import accept_exponent
+from week_3.ising_model import IsingModel
+from week_2.metropolis_hastings import accept_exponent
 
 """
 Combinatoric optimisation

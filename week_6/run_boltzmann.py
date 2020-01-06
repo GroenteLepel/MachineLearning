@@ -8,13 +8,13 @@ Advanced Machine Learning @ Radboud University
 """
 
 #%% Import modules & defining constants
-from ising_model import IsingModel
-import boltzmann
+from week_3.ising_model import IsingModel
+from week_6 import boltzmann
 
 N = 10
 
 
 #%% Main
 im = IsingModel(N, frustrated = True, threshold = True)
-states = boltzmann.generate_state_set(im,5)
-print(boltzmann.LLH(im,states))
+states = boltzmann.generate_state_set(im, 5)
+print(boltzmann.LLH(im, states))

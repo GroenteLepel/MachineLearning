@@ -1,6 +1,6 @@
-from p_star_distribution import p_star_distribution, objective_function
+from week_2.p_star_distribution import p_star_distribution, objective_function
 import numpy as np
-from metropolis_hastings import metropolis_hastings
+from week_2.metropolis_hastings import metropolis_hastings
 import matplotlib.pyplot as plt
 import functools
 
