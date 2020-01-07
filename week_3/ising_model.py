@@ -14,7 +14,7 @@ class IsingModel:
         self.threshold_vector = self._generate_thresholds()
         self.state = self._generate_spin_state()
 
-        # self.normalisation_constant = self._find_normalisation_constant()
+        self.normalisation_constant = 0
 
     def _generate_matrix(self):
         # Generate a nxn matrix, we chose normal distribution
@@ -35,6 +35,7 @@ class IsingModel:
 
     def _generate_thresholds(self):
         # Generate a threshold vector for the Boltzmann-Gibbs distribution
+        # TODO: elaborate why we choose the uniform distribution.
         if self.threshold:
             return np.random.uniform(-1.0, 1.0, size=(self.n,))
         else:
@@ -43,7 +44,7 @@ class IsingModel:
     def _generate_spin_state(self):
         return np.random.choice([-1, 1], size=(self.n,))
 
-    def _find_normalisation_constant(self):
+    def find_normalisation_constant(self):
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
         dummy = copy.deepcopy(self)
         dummy.state = np.ones(self.n)
@@ -51,7 +52,7 @@ class IsingModel:
         normalisation_constant = np.exp(-dummy.ising_energy())
         for k in range(1, self.n + 1):
             # We want to loop through all possible spin configurations of
-            # length n To do this I use all flip combinations possible of
+            # length n. To do this I use all flip combinations possible of
             # length 1-n No flips (thus state [1,1,1,..]) is already
             # calculated at initialisation of the normalisation constant
             flip_combinations = self.generate_flip_combinations(k)
@@ -60,7 +61,7 @@ class IsingModel:
                 dummy.state[flip_combination] *= -1
                 normalisation_constant += np.exp(-dummy.ising_energy())
 
-        return normalisation_constant
+        self.normalisation_constant = normalisation_constant
 
     def flip_state(self, i):
         self.state[i] *= -1
@@ -75,10 +76,19 @@ class IsingModel:
 
     def ising_energy(self):
         return -0.5 * np.dot(self.state,
-                             np.dot(self.coupling_matrix, self.state)) - np.dot(
-            self.threshold_vector, self.state)
+                             np.dot(self.coupling_matrix, self.state)) \
+               - np.dot(self.threshold_vector, self.state)
 
     def p(self):
+        """
+        Boltzmann-Gauss distribution for this Ising Model with variables
+        of all the spin states and its coupling matrix. Computes the
+        normalisation constant first, and uses the Ising energy from this model.
+        :return:  1D-float.
+        """
+        if self.normalisation_constant == 0:
+            self.find_normalisation_constant()
+
         return 1. / self.normalisation_constant * np.exp(-self.ising_energy())
 
     def estimate_max_energy_diff(self, neighbourhood):
@@ -95,7 +105,7 @@ class IsingModel:
         - pick the max difference
 
         :param neighbourhood:
-        :return:
+        :return: float, estimated maximum energy difference.
         """
         assert neighbourhood <= self.n, "Value of neighbourhood exceeds the amount of spins in the state."
 
