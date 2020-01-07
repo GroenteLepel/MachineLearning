@@ -90,8 +90,9 @@ class IsingOptimiser:
 
         # Estimate the maximum dE for flipping into a certain neighbourhood
         factor = 1.01  # increment of beta at each new chain
-        max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
-        beta_init = 1 / max_de  # sets initial temperature
+        # max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
+        # beta_init = 1 / max_de  # sets initial temperature
+        beta_init = 1 / 100
         beta_list = beta_init * np.logspace(1, n_betas,
                                             num=n_betas, base=factor)
 
@@ -99,10 +100,9 @@ class IsingOptimiser:
         current_energy = self.im.ising_energy()
         t_count = 0
         stdev_energies[t_count] = 1
-        while stdev_energies[t_count] > 0:
+        # while stdev_energies > 440:
+        while stdev_energies[t_count] > 1e-12:
             t_count += 1
-            if t_count % 100 == 0:
-                print(t_count)
 
             # Initialise energy_array
             tmp_energy_array = np.zeros(length_markov_chain)
@@ -128,6 +128,11 @@ class IsingOptimiser:
 
             mean_energies[t_count] = np.mean(tmp_energy_array)
             stdev_energies[t_count] = np.std(tmp_energy_array)
+            if t_count % 100 == 0:
+                print('{}: mean: {}, stdev: {}.'.format(t_count,
+                                                        mean_energies[t_count],
+                                                        stdev_energies[
+                                                            t_count]))
 
         return t_count, beta_list[:t_count], \
                mean_energies[:t_count], stdev_energies[:t_count]
