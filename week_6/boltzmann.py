@@ -8,64 +8,17 @@ Advanced Machine Learning @ Radboud University
 Assignment: Boltzmann
 """
 
+# %% Importing modules
+import itertools
 
-#%% Importing modules
 import numpy as np
 from week_3.ising_model import IsingModel
+from week_6.ising_ensemble import IsingEnsemble
 import copy
 
 
-#%% Defining functions
-def generate_state_set(isingmodel: IsingModel, size: int):
-    # Generate a set of states
-    state_set = np.array([isingmodel._generate_spin_state() for _ in range(size)])
-    return state_set
-
-def LLH(isingmodel: IsingModel, states):
-    # Calculate the log-likelihood for the set of states (par 2.5 of the reader)
-    P = len(states)
-    loglikelihood = 0
-    for state in states:
-        isingmodel_dummy = copy.deepcopy(isingmodel)
-        isingmodel_dummy.state = state
-        loglikelihood += np.log(isingmodel_dummy.p())
-    return 1./P * loglikelihood
-
-def expectations(isingmodel: IsingModel, states):
-    # Calculate the fixed expectation values <s_i> and <s_i s_j>
-    # Returns a vector and a matrix respectively
-    dummy = copy.deepcopy(isingmodel)
-    
-    expectation_s = np.zeros(isingmodel.n)
-    expectation_ss = np.zeros((isingmodel.n, isingmodel.n))
-    
-    for k in range(isingmodel.n + 1):
-        # We want to loop through all possible spin configurations of length n
-        # To do this I use all flip combinations possible of length 1-n
-        flip_combinations = isingmodel.generate_flip_combinations(k)
-        for flip_combination in flip_combinations:
-            dummy.state = np.ones(isingmodel.n)
-            if k != 0:
-                # for k==0, flip_combination is an empty list and this gives
-                # problems in this step. we do not have to flip in this case.
-                dummy.state[flip_combination] *= -1
-                
-            for i in range(isingmodel.n):
-                expectation_s[i] += dummy.state[i] * dummy.p()
-                for j in range(isingmodel.n):
-                    expectation_ss[i][j] += dummy.state[i] * dummy.state[j] * dummy.p()
-            
-    return [expectation_s, expectation_ss]
-
-def expectation_si_clamped(states, index):
-    P = len(states)
-    return 1./P * np.sum(states[:, index])
-
-def expectation_sisj_clamped(states, index1, index2):
-    P = len(states)
-    return 1./P * np.sum(states[:, index1] * states[:, index2])
-
-def boltzmann_optimiser(isingmodel: IsingModel, states, eta):
+# %% Defining functions
+def boltzmann_optimiser(ie: IsingEnsemble, eta=0.5):
     """
         Optimise the Boltzmann machine. Works as follows:
             - calculate the gradient of LLH w.r.t. thresholds and weights
@@ -74,8 +27,64 @@ def boltzmann_optimiser(isingmodel: IsingModel, states, eta):
                     one by one (I think one by one because in the former case
                     it could not converge)
 
-        :return: weights, thresholds
+        :return:
     """
-    [expectation_s, expectation_ss] = expectations(isingmodel, states)
-    
-    return weights, thresholds
+    # Initialise criterion value
+    dw_abs, dtheta = 1, 1
+    likelihood = np.zeros(int(1e5))
+    cnt = 0
+
+    while not (dw_abs == 0 and dtheta == 0):
+        print(cnt)
+        print(dw_abs, dtheta)
+        old_w = copy.copy(ie.coupling_matrix)
+        old_t = copy.copy(ie.threshold_vector)
+
+        for i in range(ie.n_spins):
+            for j in range(ie.n_spins):
+                llh_grad_w = \
+                    ie.expectation_matrix_c[i][j] - \
+                    expectation(ie.coupling_matrix, ie.threshold_vector, i, j)
+
+                ie.coupling_matrix[i][j] += eta * llh_grad_w
+
+            llh_grad_t = \
+                    ie.expectation_vector_c[i] - \
+                    expectation(ie.coupling_matrix, ie.threshold_vector, i)
+
+            ie.threshold_vector[i] += eta * llh_grad_t
+
+        dw_abs = np.abs(ie.coupling_matrix - old_w).sum()
+        dtheta = np.abs(ie.threshold_vector - old_t).sum()
+
+        likelihood[cnt] = ie.LLH()
+        print(likelihood[cnt])
+        cnt += 1
+
+    return likelihood[likelihood < 0]
+
+
+def gen_all_possible_states(n_spins):
+    lst = list(map(list, itertools.product([-1, 1], repeat=n_spins)))
+    return np.array(lst)
+
+
+def expectation(coupling_matrix, threshold_vector, i: int, j: int = -1):
+    states = gen_all_possible_states(len(threshold_vector))
+
+    dummy_state = IsingModel(len(threshold_vector), True, True)
+    dummy_state.coupling_matrix = coupling_matrix
+    dummy_state.threshold_vector = threshold_vector
+
+    if j == -1:
+        sum_val = 0
+        for state in states:
+            dummy_state.state = state
+            sum_val += state[i] * dummy_state.p()
+    else:
+        sum_val = 0
+        for state in states:
+            dummy_state.state = state
+            sum_val += state[i] * state[j] * dummy_state.p()
+
+    return sum_val

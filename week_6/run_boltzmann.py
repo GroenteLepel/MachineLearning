@@ -7,14 +7,17 @@ Created on Tue Dec 17 12:15:36 2019
 Advanced Machine Learning @ Radboud University
 """
 
-#%% Import modules & defining constants
+# %% Import modules & defining constants
 from week_3.ising_model import IsingModel
 from week_6 import boltzmann
+from week_6.ising_ensemble import IsingEnsemble
+import matplotlib.pyplot as plt
 
 N = 10
 
+# %% Main
+ie = IsingEnsemble(10, 10)
 
-#%% Main
-im = IsingModel(N, frustrated = True, threshold = True)
-states = boltzmann.generate_state_set(im, 5)
-print(boltzmann.LLH(im, states))
+llh = boltzmann.boltzmann_optimiser(ie)
+plt.plot(llh)
+plt.show()
