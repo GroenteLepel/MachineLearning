@@ -4,6 +4,7 @@ from week_3.ising_model import IsingModel
 import copy
 import itertools
 
+
 class IsingEnsemble:
 
     def __init__(self, n_models, n_spins, frustrated=True):
@@ -17,8 +18,9 @@ class IsingEnsemble:
         self.coupling_matrix = copy.deepcopy(self.state_set[0].coupling_matrix)
         self.threshold_vector = copy.deepcopy(self.state_set[0].threshold_vector)
 
-        self.state_set[0].find_normalisation_constant()
-        self.normalisation_constant = self.state_set[0].normalisation_constant
+        # TODO: this is different for each Ising Model, so not the same for
+        #  all like we do now.
+        self.normalisation_constant = self._find_normalisation_constant()
 
         self.expectation_vector_c = self._clamped_expectation_vector()
         self.expectation_matrix_c = self._clamped_expectation_matrix()
@@ -35,6 +37,25 @@ class IsingEnsemble:
             state.coupling_matrix = self.coupling_matrix
             state.threshold_vector = self.threshold_vector
             state.normalisation_constant = self.normalisation_constant
+
+    # TODO: clean this up.
+    def _find_normalisation_constant(self):
+        # Find normalisation constant Z=sum(-E(s)), sum over all states s
+        dummy = IsingModel(self.n_spins,
+                           frustrated=self.frustrated,
+                           threshold=True)
+
+        all_states = self._gen_all_possible_states()
+        normalisation_constant = 0
+        for state in all_states:
+            dummy.state = state
+            normalisation_constant += np.exp(- dummy.ising_energy())
+
+        return normalisation_constant
+
+    def update_normalisation_constants(self):
+        for model in self.state_set:
+            model.update_normalisation_constant()
 
     def LLH(self):
         # Calculate the log-likelihood for the set of states (par 2.5 of the reader)
@@ -58,3 +79,8 @@ class IsingEnsemble:
         expectation /= self.n_models
 
         return expectation
+
+    # TODO: clean this up.
+    def _gen_all_possible_states(self):
+        lst = list(map(list, itertools.product([-1, 1], repeat=self.n_spins)))
+        return np.array(lst)
