@@ -18,7 +18,7 @@ import copy
 
 
 # %% Defining functions
-def boltzmann_optimiser(ie: IsingEnsemble, eta=0.5):
+def boltzmann_optimiser(ie: IsingEnsemble, eta=0.1):
     """
         Optimise the Boltzmann machine. Works as follows:
             - calculate the gradient of LLH w.r.t. thresholds and weights
@@ -34,36 +34,44 @@ def boltzmann_optimiser(ie: IsingEnsemble, eta=0.5):
     likelihood = np.zeros(int(1e5))
     cnt = 0
 
-    while not (dw_abs == 0 and dtheta == 0):
-        print(cnt)
-        print(dw_abs, dtheta)
+    while not (dw_abs == 0 and dtheta == 0) or cnt < 30:
+        print("---")
+        print("Iteration", cnt)
         old_w = copy.copy(ie.coupling_matrix)
         old_t = copy.copy(ie.threshold_vector)
 
+        print("[c", end='')
         for i in range(ie.n_spins):
+            print("==", end='')
             for j in range(ie.n_spins):
                 llh_grad_w = \
                     ie.expectation_matrix_c[i][j] - \
                     expectation(ie.coupling_matrix, ie.threshold_vector, i, j)
 
                 ie.coupling_matrix[i][j] += eta * llh_grad_w
+                ie.update_normalisation_constants()
 
             llh_grad_t = \
                     ie.expectation_vector_c[i] - \
                     expectation(ie.coupling_matrix, ie.threshold_vector, i)
 
             ie.threshold_vector[i] += eta * llh_grad_t
+            ie.update_normalisation_constants()
+
+        print("3]")
 
         dw_abs = np.abs(ie.coupling_matrix - old_w).sum()
         dtheta = np.abs(ie.threshold_vector - old_t).sum()
+        print("dw_abs:", dw_abs, "dtheta:", dtheta)
 
         likelihood[cnt] = ie.LLH()
-        print(likelihood[cnt])
+        print("Log-likelihood:", likelihood[cnt])
+        print("---\n")
         cnt += 1
 
     return likelihood[likelihood < 0]
 
-
+# TODO: clean this up.
 def gen_all_possible_states(n_spins):
     lst = list(map(list, itertools.product([-1, 1], repeat=n_spins)))
     return np.array(lst)
