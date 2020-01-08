@@ -36,7 +36,7 @@ class IsingOptimiser:
     def optimise(self, method: str):
         switcher = {
             "iter": lambda: self._optimise_iteratively(),
-            "sa": lambda: self._simulated_annealing()
+            "sa": lambda: self.simulated_annealing()
         }
         method = switcher.get(method, lambda: "No proper method given")
         return method()
@@ -69,11 +69,12 @@ class IsingOptimiser:
 
         return False
 
-    def _simulated_annealing(self,
-                             length_markov_chain=2000, n_betas=1000):
+    def simulated_annealing(self,
+                            beta_init=-1, cooling_factor=1.01,
+                            length_markov_chain=2000, n_betas=1000):
         """
         Copy-paste of simulated annealing method delivered to us in the
-        exercise. By no means is this a good bit of code. Improve.
+        exercise.
 
         TODO:
           [ ] optimise the while loop so increments do not take place inside the
@@ -88,13 +89,14 @@ class IsingOptimiser:
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
         stdev_energies = np.zeros(n_betas)  # Stores std energy at each beta
 
-        # Estimate the maximum dE for flipping into a certain neighbourhood
-        factor = 1.01  # increment of beta at each new chain
-        # max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
-        # beta_init = 1 / max_de  # sets initial temperature
-        beta_init = 1 / 100
+        # If no (or wrong) inital beta is given, estimate a good starting point.
+        if beta_init < 0:
+            # Estimate the maximum dE for flipping into a certain neighbourhood
+            max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
+            beta_init = 1 / max_de  # sets initial temperature
+
         beta_list = beta_init * np.logspace(1, n_betas,
-                                            num=n_betas, base=factor)
+                                            num=n_betas, base=cooling_factor)
 
         # Check energy of current state
         current_energy = self.im.ising_energy()
