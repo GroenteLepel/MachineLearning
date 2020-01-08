@@ -4,13 +4,13 @@ from matplotlib import ticker
 
 
 def loadpickles():
-    with open("../data/IM_sa_fer.pkl", "rb") as f:
+    with open("../data/picklejar/IM_sa_fer.pkl", "rb") as f:
         cnt_fer = pickle.load(f)
         betas_fer = pickle.load(f)
         me_fer = pickle.load(f) / 100
         stde_fer = pickle.load(f) / 100
 
-    with open("../data/IM_sa_fr.pkl", "rb") as f:
+    with open("../data/picklejar/IM_sa_fr.pkl", "rb") as f:
         cnt_fr = pickle.load(f)
         betas_fr = pickle.load(f)
         me_fr = pickle.load(f) / 100

@@ -5,8 +5,8 @@ import numpy as np
 neighbourhoods = np.arange(1, 6)
 
 plt.rcParams.update({'font.size': 13})
-energies = pickle.load(open("../data/IM_energies.pkl", "rb"))
-cpu_times = pickle.load(open("../data/IM_cpu_times.pkl", "rb"))
+energies = pickle.load(open("../data/picklejar/IM_energies.pkl", "rb"))
+cpu_times = pickle.load(open("../data/picklejar/IM_cpu_times.pkl", "rb"))
 
 dx = 0.5
 x = cpu_times.mean(axis=1)
