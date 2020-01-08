@@ -40,17 +40,14 @@ def gen_factor_set(io: IsingOptimiser, factor: float):
 
 
 def gen_full_markov_set(io: IsingOptimiser):
-    t_1, std_1, me_1 = gen_markov_set(io_fr, 1000)
-    io_fr.reset()
-    t_2, std_2, me_2 = gen_markov_set(io_fr, 2000)
-    io_fr.reset()
-    t_3, std_3, me_3 = gen_markov_set(io_fr, 3000)
-    io_fr.reset()
-
-    temps = np.array([t_1, t_2, t_3])
-    stds = np.array([std_1, std_2, std_3])
-    mes = np.array([me_1, me_2, me_3])
-
+    lengths = np.array([1000, 2000, 3000])
+    temps, stds, mes = [], [], []
+    for l in lengths:
+        t, std, me = gen_markov_set(io, l)
+        temps.append(t)
+        stds.append(std)
+        mes.append(me)
+        io.reset()
     return temps, stds, mes
 
 
@@ -62,6 +59,7 @@ def gen_full_beta_set(io: IsingOptimiser):
         temps.append(t)
         stds.append(std)
         mes.append(me)
+        io.reset()
     return temps, stds, mes
 
 
@@ -73,6 +71,7 @@ def gen_full_factor_set(io: IsingOptimiser):
         temps.append(t)
         stds.append(std)
         mes.append(me)
+        io.reset()
     return temps, stds, mes
 
 
