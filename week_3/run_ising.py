@@ -11,9 +11,11 @@ import pickle
 # im_fr = IsingModel(n=N, frustrated=True, threshold=False)
 
 
-def genset(length_chain):
-    cnt, betas, me, std = io_fr._simulated_annealing(
-        length_markov_chain=length_chain)
+def gen_markov_set(io: IsingOptimiser, length_chain: int):
+    beta_i = 1 / 100
+    cnt, betas, me, std = \
+        io.simulated_annealing(beta_init=beta_i,
+                               length_markov_chain=length_chain)
     temp = 1 / betas
     me /= 100
     std /= 100
@@ -21,31 +23,81 @@ def genset(length_chain):
     return temp, std, me
 
 
-with open('../data/im_frustrated_n500.pkl', 'rb') as f:
+def gen_initbeta_set(io: IsingOptimiser, beta: float):
+    cnt, betas, me, std = io.simulated_annealing(beta_init=beta)
+    temp = 1 / betas
+    me /= 100
+    std /= 100
+    return temp, std, me
+
+
+def gen_factor_set(io: IsingOptimiser, factor: float):
+    cnt, betas, me, std = io.simulated_annealing(cooling_factor=factor)
+    temp = 1 / betas
+    me /= 100
+    std /= 100
+    return temp, std, me
+
+
+def gen_full_markov_set(io: IsingOptimiser):
+    t_1, std_1, me_1 = gen_markov_set(io_fr, 1000)
+    io_fr.reset()
+    t_2, std_2, me_2 = gen_markov_set(io_fr, 2000)
+    io_fr.reset()
+    t_3, std_3, me_3 = gen_markov_set(io_fr, 3000)
+    io_fr.reset()
+
+    temps = np.array([t_1, t_2, t_3])
+    stds = np.array([std_1, std_2, std_3])
+    mes = np.array([me_1, me_2, me_3])
+
+    return temps, stds, mes
+
+
+def gen_full_beta_set(io: IsingOptimiser):
+    beta_i = np.array([1 / 100, 1 / 10, -1])
+    temps, stds, mes = [], [], []
+    for b in beta_i:
+        t, std, me = gen_initbeta_set(io, b)
+        temps.append(t)
+        stds.append(std)
+        mes.append(me)
+    return temps, stds, mes
+
+
+def gen_full_factor_set(io: IsingOptimiser):
+    factors = np.array([1.01, 1.5, 2])
+    temps, stds, mes = [], [], []
+    for f in factors:
+        t, std, me = gen_factor_set(io, f)
+        temps.append(t)
+        stds.append(std)
+        mes.append(me)
+    return temps, stds, mes
+
+
+with open('../data/picklejar/im_frustrated_n50.pkl', 'rb') as f:
     im_fr = pickle.load(f)
 
 io_fr = IsingOptimiser(im_fr, neighbourhood=2)
 
-t_1, std_1, me_1 = genset(1000)
-io_fr.reset()
-t_2, std_2, me_2 = genset(2000)
-io_fr.reset()
-t_3, std_3, me_3 = genset(3000)
-io_fr.reset()
+# [t_1, t_2, t_3], [std_1, std_2, std_3], [me_1, me_2, me_3] = \
+#     gen_full_markov_set(io_fr)
 
-with open('../data/sa_markov_run_n500.pkl', 'wb') as output:
-    pickle.dump(t_1, output)
-    pickle.dump(std_1, output)
-    pickle.dump(me_1, output)
+# temps, stds, mes = gen_full_beta_set(io_fr)
+temps, stds, mes = gen_full_factor_set(io_fr)
 
-    pickle.dump(t_2, output)
-    pickle.dump(std_2, output)
-    pickle.dump(me_2, output)
+# with open('../data/picklejar/sa_markov_run_n50.pkl', 'wb') as output:
+#     pickle.dump(t_1, output)
+#     pickle.dump(std_1, output)
+#     pickle.dump(me_1, output)
+#
+#     pickle.dump(t_2, output)
+#     pickle.dump(std_2, output)
+#     pickle.dump(me_2, output)
+#
+#     pickle.dump(t_3, output)
+#     pickle.dump(std_3, output)
+#     pickle.dump(me_3, output)
 
-    pickle.dump(t_3, output)
-    pickle.dump(std_3, output)
-    pickle.dump(me_3, output)
-
-plotIM.three_columns(t_1, std_1, me_1,
-                     t_2, std_2, me_2,
-                     t_3, std_3, me_3)
+plotIM.three_columns(temps, mes, stds)
