@@ -59,25 +59,19 @@ def plotfig(temp_fer, std_fer, me_fer,
     # plt.savefig("../data/McKayFig3111.png")
 
 
-def three_columns(x_1, y_11, y_12,
-                  x_2, y_21, y_22,
-                  x_3, y_31, y_32):
+def three_columns(x_data, y1_data, y2_data):
     fig, ax = init_plot(2, 3)
 
     ax[0][0].set_xscale('log')  # Set x scale of entire plot
-    ax[0][0].set_xlim(x_3.min(), x_3.max())
+    ax[0][0].set_xlim(x_data.min(), x_data.max())
     # ax[0][0].set_ylim(-7.2, 0.2)
     # ax[0][1].set_ylim(-7.2, 0.2)
 
     ax[0][0].set_ylabel("(Mean) energy")
-    ax[0][0].plot(x_1, y_11, c='black')
-    ax[0][1].plot(x_2, y_21, c='black')
-    ax[0][2].plot(x_3, y_31, c='black')
-
     ax[1][0].set_ylabel(r"$\sigma(E)$")
-    ax[1][0].plot(x_1, y_12, c='black')
-    ax[1][1].plot(x_2, y_22, c='black')
-    ax[1][2].plot(x_3, y_32, c='black')
+    for i in range(3):
+        ax[0][i].plot(x_data[i], y1_data[i], c='black')
+        ax[1][i].plot(x_data[i], y2_data[i], c='black')
 
     # Set x labels underneath and titles above
     ax[0][0].set_title("1000")
