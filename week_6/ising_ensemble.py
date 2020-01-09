@@ -72,7 +72,7 @@ class IsingEnsemble:
         expectation = np.zeros(self.n_spins)
         for state in self.state_set:
             expectation += state.state
-        expectation /= self.n_models
+        expectation = expectation / self.n_models
 
         return expectation
 
@@ -80,7 +80,7 @@ class IsingEnsemble:
         expectation = np.zeros(shape=(self.n_spins, self.n_spins))
         for state in self.state_set:
             expectation += np.outer(state.state, state.state)
-        expectation /= self.n_models
+        expectation = expectation / self.n_models
 
         return expectation
 
