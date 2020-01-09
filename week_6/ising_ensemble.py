@@ -36,14 +36,17 @@ class IsingEnsemble:
             #  values change, all the states change along.
             state.coupling_matrix = self.coupling_matrix
             state.threshold_vector = self.threshold_vector
+            # This is not a reference. This is just to make sure that in the
+            #  initial state, all normalisation constants are equal.
             state.normalisation_constant = self.normalisation_constant
 
-    # TODO: clean this up.
     def _find_normalisation_constant(self):
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
         dummy = IsingModel(self.n_spins,
                            frustrated=self.frustrated,
                            threshold=True)
+        dummy.coupling_matrix = self.coupling_matrix
+        dummy.threshold_vector = self.threshold_vector
 
         all_states = self._gen_all_possible_states()
         normalisation_constant = 0
@@ -54,8 +57,9 @@ class IsingEnsemble:
         return normalisation_constant
 
     def update_normalisation_constants(self):
+        self.normalisation_constant = self._find_normalisation_constant()
         for model in self.state_set:
-            model.update_normalisation_constant()
+            model.set_normalisation_constant(self.normalisation_constant)
 
     def LLH(self):
         # Calculate the log-likelihood for the set of states (par 2.5 of the reader)

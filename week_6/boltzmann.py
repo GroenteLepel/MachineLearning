@@ -18,23 +18,20 @@ import copy
 
 
 # %% Defining functions
-def boltzmann_optimiser(ie: IsingEnsemble, eta=0.1):
+def boltzmann_optimiser(ie: IsingEnsemble, eta=0.4):
     """
         Optimise the Boltzmann machine. Works as follows:
             - calculate the gradient of LLH w.r.t. thresholds and weights
             - update thresholds and weights: += eta * grad(LLH)
-            - TODO: in which order should we update, all at the same time or
-                    one by one (I think one by one because in the former case
-                    it could not converge)
 
         :return:
     """
     # Initialise criterion value
     dw_abs, dtheta = 1, 1
-    likelihood = np.zeros(int(1e5))
+    likelihood = -1 * np.ones(int(1e5))
     cnt = 0
 
-    while not (dw_abs == 0 and dtheta == 0) or cnt < 30:
+    while cnt < 1000:
         print("---")
         print("Iteration", cnt)
         old_w = copy.copy(ie.coupling_matrix)
@@ -43,17 +40,20 @@ def boltzmann_optimiser(ie: IsingEnsemble, eta=0.1):
         print("[c", end='')
         for i in range(ie.n_spins):
             print("==", end='')
-            for j in range(ie.n_spins):
+            for j in range(i + 1, ie.n_spins):
                 llh_grad_w = \
                     ie.expectation_matrix_c[i][j] - \
-                    expectation(ie.coupling_matrix, ie.threshold_vector, i, j)
+                    expectation(ie.coupling_matrix, ie.threshold_vector,
+                                ie.normalisation_constant, i, j)
 
                 ie.coupling_matrix[i][j] += eta * llh_grad_w
+                ie.coupling_matrix[j][i] += eta * llh_grad_w
                 ie.update_normalisation_constants()
 
             llh_grad_t = \
                     ie.expectation_vector_c[i] - \
-                    expectation(ie.coupling_matrix, ie.threshold_vector, i)
+                    expectation(ie.coupling_matrix, ie.threshold_vector,
+                                ie.normalisation_constant, i)
 
             ie.threshold_vector[i] += eta * llh_grad_t
             ie.update_normalisation_constants()
@@ -69,7 +69,8 @@ def boltzmann_optimiser(ie: IsingEnsemble, eta=0.1):
         print("---\n")
         cnt += 1
 
-    return likelihood[likelihood < 0]
+    return likelihood[:cnt]
+
 
 # TODO: clean this up.
 def gen_all_possible_states(n_spins):
@@ -77,12 +78,14 @@ def gen_all_possible_states(n_spins):
     return np.array(lst)
 
 
-def expectation(coupling_matrix, threshold_vector, i: int, j: int = -1):
+def expectation(coupling_matrix, threshold_vector, normalisation_constant,
+                i: int, j: int = -1):
     states = gen_all_possible_states(len(threshold_vector))
 
     dummy_state = IsingModel(len(threshold_vector), True, True)
     dummy_state.coupling_matrix = coupling_matrix
     dummy_state.threshold_vector = threshold_vector
+    dummy_state.normalisation_constant = normalisation_constant
 
     if j == -1:
         sum_val = 0

@@ -9,7 +9,8 @@ class IsingModel:
     def __init__(self, n: int, frustrated: bool, threshold: bool):
         self.n = n
         global GLOBAL_STATES
-        GLOBAL_STATES = np.array(list(map(list, itertools.product([-1, 1], repeat=self.n))))
+        GLOBAL_STATES = np.array(
+            list(map(list, itertools.product([-1, 1], repeat=self.n))))
 
         self.frustrated = frustrated
         self.threshold = threshold
@@ -60,11 +61,11 @@ class IsingModel:
         return flip_combinations
 
     def ising_energy(self):
-        return -0.5 * np.dot(self.state,
-                             np.dot(self.coupling_matrix, self.state)) \
+        return -0.5 * \
+               np.dot(self.state, np.dot(self.coupling_matrix, self.state)) \
                - np.dot(self.threshold_vector, self.state)
 
-    def _find_normalisation_constant(self):
+    def find_normalisation_constant(self):
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
         dummy = IsingModel(self.n,
                            frustrated=self.frustrated,
@@ -78,7 +79,10 @@ class IsingModel:
         return normalisation_constant
 
     def update_normalisation_constant(self):
-        self.normalisation_constant = self._find_normalisation_constant()
+        self.normalisation_constant = self.find_normalisation_constant()
+
+    def set_normalisation_constant(self, new_constant):
+        self.normalisation_constant = new_constant
 
     def p(self):
         """
@@ -90,7 +94,11 @@ class IsingModel:
         if self.normalisation_constant == 0:
             self.update_normalisation_constant()
 
-        return 1. / self.normalisation_constant * np.exp(-self.ising_energy())
+        e = self.ising_energy()
+        if e < -20:
+            print(e)
+
+        return 1. / self.normalisation_constant * np.exp(-e)
 
     def estimate_max_energy_diff(self, neighbourhood):
         """

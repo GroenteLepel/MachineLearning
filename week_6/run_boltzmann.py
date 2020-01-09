@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 N = 10
 
 # %% Main
-ie = IsingEnsemble(10, 10)
+ie = IsingEnsemble(5, 5)
 
 llh = boltzmann.boltzmann_optimiser(ie)
 plt.plot(llh)
