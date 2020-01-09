@@ -13,6 +13,7 @@ import itertools
 
 import numpy as np
 from week_3.ising_model import IsingModel
+import week_6.all_states as all_states
 from week_6.ising_ensemble import IsingEnsemble
 import copy
 
@@ -77,15 +78,9 @@ def boltzmann_optimiser(ie: IsingEnsemble, eta=0.4, output: bool=False):
     return likelihood[:cnt]
 
 
-# TODO: clean this up.
-def gen_all_possible_states(n_spins):
-    lst = list(map(list, itertools.product([-1, 1], repeat=n_spins)))
-    return np.array(lst)
-
-
 def expectation(coupling_matrix, threshold_vector, normalisation_constant,
                 i: int, j: int = -1):
-    states = gen_all_possible_states(len(threshold_vector))
+    states = all_states.gen_all_possible_states(len(threshold_vector))
 
     dummy_state = IsingModel(len(threshold_vector), True, True)
     dummy_state.coupling_matrix = coupling_matrix
