@@ -9,9 +9,6 @@ class IsingModel:
 
     def __init__(self, n: int, frustrated: bool, threshold: bool):
         self.n = n
-        global GLOBAL_STATES
-        GLOBAL_STATES = np.array(
-            list(map(list, itertools.product([-1, 1], repeat=self.n))))
 
         self.frustrated = frustrated
         self.threshold = threshold
