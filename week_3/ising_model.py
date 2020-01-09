@@ -2,6 +2,7 @@ import copy
 import itertools
 from itertools import combinations
 import numpy as np
+import week_6.all_states as all_states
 
 
 class IsingModel:
@@ -67,12 +68,14 @@ class IsingModel:
 
     def find_normalisation_constant(self):
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
+        states = all_states.gen_all_possible_states(self.n)
+
         dummy = IsingModel(self.n,
                            frustrated=self.frustrated,
                            threshold=self.threshold)
 
         normalisation_constant = 0
-        for state in GLOBAL_STATES:
+        for state in states:
             dummy.state = state
             normalisation_constant += np.exp(- dummy.ising_energy())
 

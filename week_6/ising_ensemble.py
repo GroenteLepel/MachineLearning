@@ -3,7 +3,7 @@ import numpy as np
 from week_3.ising_model import IsingModel
 import copy
 import itertools
-
+import week_6.all_states as all_states
 
 class IsingEnsemble:
 
@@ -48,9 +48,9 @@ class IsingEnsemble:
         dummy.coupling_matrix = self.coupling_matrix
         dummy.threshold_vector = self.threshold_vector
 
-        all_states = self._gen_all_possible_states()
+        states = all_states.gen_all_possible_states(self.n_spins)
         normalisation_constant = 0
-        for state in all_states:
+        for state in states:
             dummy.state = state
             normalisation_constant += np.exp(- dummy.ising_energy())
 
@@ -83,8 +83,3 @@ class IsingEnsemble:
         expectation = expectation / self.n_models
 
         return expectation
-
-    # TODO: clean this up.
-    def _gen_all_possible_states(self):
-        lst = list(map(list, itertools.product([-1, 1], repeat=self.n_spins)))
-        return np.array(lst)

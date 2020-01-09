@@ -13,10 +13,11 @@ from week_6 import boltzmann
 from week_6.ising_ensemble import IsingEnsemble
 import matplotlib.pyplot as plt
 
-N = 10
+n_spins = 10
+n_models = 10
 
 # %% Main
-ie = IsingEnsemble(5, 5)
+ie = IsingEnsemble(n_models, n_spins)
 
 llh = boltzmann.boltzmann_optimiser(ie)
 plt.plot(llh)
