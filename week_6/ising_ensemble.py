@@ -20,7 +20,10 @@ class IsingEnsemble:
 
         # TODO: this is different for each Ising Model, so not the same for
         #  all like we do now.
-        self.normalisation_constant = self._find_normalisation_constant()
+        if n_spins <= 10:
+            self.normalisation_constant = self._find_normalisation_constant()
+        else:
+            self.normalisation_constant = 0
 
         self.expectation_vector_c = self._clamped_expectation_vector()
         self.expectation_matrix_c = self._clamped_expectation_matrix()
