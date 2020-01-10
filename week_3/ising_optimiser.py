@@ -70,7 +70,7 @@ class IsingOptimiser:
         return False
 
     def simulated_annealing(self,
-                            beta_init=-1, cooling_factor=1.01,
+                            beta_init=-1, cooling_factor=1.05,
                             length_markov_chain=2000, n_betas=1000):
         """
         Copy-paste of simulated annealing method delivered to us in the
@@ -85,6 +85,7 @@ class IsingOptimiser:
         :return:
         """
         print("Optimising using simulated annealing.")
+        print("[", end='')
 
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
         stdev_energies = np.zeros(n_betas)  # Stores std energy at each beta
@@ -130,11 +131,15 @@ class IsingOptimiser:
 
             mean_energies[t_count] = np.mean(tmp_energy_array)
             stdev_energies[t_count] = np.std(tmp_energy_array)
-            if t_count % 100 == 0:
-                print('{}: mean: {}, stdev: {}.'.format(t_count,
-                                                        mean_energies[t_count],
-                                                        stdev_energies[
-                                                            t_count]))
 
+            if t_count % 10 == 0:
+                print("=", end='')
+            # if t_count % 100 == 0:
+            #     print('{}: mean: {}, stdev: {}.'.format(t_count,
+            #                                             mean_energies[t_count],
+            #                                             stdev_energies[
+            #                                                 t_count]))
+
+        print("]")
         return t_count, beta_list[:t_count], \
                mean_energies[:t_count], stdev_energies[:t_count]
