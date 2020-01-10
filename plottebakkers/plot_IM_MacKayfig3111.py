@@ -63,7 +63,7 @@ def three_columns(x_data, y1_data, y2_data):
     fig, ax = init_plot(2, 3)
 
     ax[0][0].set_xscale('log')  # Set x scale of entire plot
-    ax[0][0].set_xlim(x_data.min(), x_data.max())
+    ax[0][0].set_xlim(x_data[2].min(), x_data[2].max())
     # ax[0][0].set_ylim(-7.2, 0.2)
     # ax[0][1].set_ylim(-7.2, 0.2)
 
