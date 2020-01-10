@@ -19,10 +19,10 @@ class IsingModel:
 
         self.normalisation_constant = 0
 
-    def _generate_matrix(self):
+    def _generate_matrix(self, std: float = 1.0):
         # Generate a nxn matrix, we chose normal distribution
         # TODO: explain why we chose normal distribution.
-        w = np.random.normal(size=(self.n, self.n))
+        w = np.random.normal(scale=std, size=(self.n, self.n))
 
         # Make it symmetric, and normalise
         w += w.transpose()
@@ -49,6 +49,9 @@ class IsingModel:
 
     def flip_state(self, i):
         self.state[i] *= -1
+
+    def remake_coupling_matrix(self, std: float = 1.0):
+        self.coupling_matrix = self._generate_matrix(std=std)
 
     def generate_flip_combinations(self, neighbourhood):
         indices = np.arange(self.n)
