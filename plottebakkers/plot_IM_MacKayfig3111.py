@@ -2,6 +2,8 @@ import pickle
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
+from week_3 import params
+
 
 def loadpickles():
     with open("../data/picklejar/IM_sa_fer.pkl", "rb") as f:
@@ -25,6 +27,7 @@ def loadpickles():
 def init_plot(nrows, ncols):
     plt.rcParams.update({'font.size': 17})
     fig, ax = plt.subplots(nrows, ncols, sharex='all', figsize=(5*ncols, 10))
+
     for ax0 in ax[0]:
         ax0.hlines(y=0, xmin=-10,
                    xmax=1e4,
@@ -59,7 +62,7 @@ def plotfig(temp_fer, std_fer, me_fer,
     # plt.savefig("../data/McKayFig3111.png")
 
 
-def three_columns(x_data, y1_data, y2_data):
+def three_columns(x_data, y1_data, y2_data, method: str):
     fig, ax = init_plot(2, 3)
 
     ax[0][0].set_xscale('log')  # Set x scale of entire plot
@@ -69,14 +72,23 @@ def three_columns(x_data, y1_data, y2_data):
 
     ax[0][0].set_ylabel("(Mean) energy")
     ax[1][0].set_ylabel(r"$\sigma(E)$")
+    dy = 0.05
+    dx = 0.0
     for i in range(3):
         ax[0][i].plot(x_data[i], y1_data[i], c='black')
         ax[1][i].plot(x_data[i], y2_data[i], c='black')
 
     # Set x labels underneath and titles above
-    ax[0][0].set_title("1000")
-    ax[0][1].set_title("2000")
-    ax[0][2].set_title("3000")
+    if method == 'markov':
+        for _ in range(3):
+            ax[0][_].set_title(params.MARKOVS[_])
+    elif method == 'factor':
+        for _ in range(3):
+            ax[0][_].set_title(params.FACTORS[_])
+    elif method == 'beta':
+        for _ in range(3):
+            ax[0][_].set_title(params.BETAS[_])
+    else:
+        raise ValueError("No proper method given.")
     ax[1][1].set_xlabel("Temperature")
-
     fig.show()

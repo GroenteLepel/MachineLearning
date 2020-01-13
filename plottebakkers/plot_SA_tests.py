@@ -1,6 +1,7 @@
 from week_3 import gen_sets
 import plottebakkers.plot_IM_MacKayfig3111 as plotIM
 import pickle
+from week_3.ising_model import IsingModel
 
 n = 50
 method = "factor"
@@ -10,6 +11,7 @@ with open(path_res, "rb") as f:
     temps = pickle.load(f)
     mes = pickle.load(f)
     stds = pickle.load(f)
+    # ims = pickle.load(f)
 
 
-plotIM.three_columns(temps, mes, stds)
+plotIM.three_columns(temps, mes, stds, method)
