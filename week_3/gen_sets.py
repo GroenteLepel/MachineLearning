@@ -115,4 +115,30 @@ def gen_sets(method: str,
             pickle.dump(ims, output)
 
     if plot_result:
-        plotIM.three_columns(temps, mes, stds)
+        plotIM.three_columns(temps, mes, stds, method)
+
+    return temps, mes, stds, ims
+
+
+def find_min_spread(method: str, steps: int = 10):
+    minima = np.zeros((steps, 3))
+    pathin, pathout = gen_paths(params.N_SPINS, method)
+    io_fr = gen_io(method, pathin)
+
+    for i in range(steps):
+        if method == "markov":
+            temps, stds, mes, ims = gen_full_markov_set(io_fr)
+            for j in range(3):
+                minima[i][j] = mes[j][-1]
+        elif method == "beta":
+            temps, stds, mes, ims = gen_full_beta_set(io_fr)
+            for j in range(3):
+                minima[i][j] = mes[j][-1]
+        elif method == "factor":
+            temps, stds, mes, ims = gen_full_factor_set(io_fr)
+            for j in range(3):
+                minima[i][j] = mes[j][-1]
+        else:
+            raise ValueError("No proper method given.")
+
+    return minima
