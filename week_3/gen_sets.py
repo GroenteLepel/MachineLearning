@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+import week_3.params as params
 from week_3.ising_model import IsingModel
 from week_3.ising_optimiser import IsingOptimiser
 import plottebakkers.plot_IM_MacKayfig3111 as plotIM
@@ -7,13 +8,13 @@ import plottebakkers.plot_IM_MacKayfig3111 as plotIM
 
 def gen_markov_set(io: IsingOptimiser, length_chain: int):
     cnt, betas, me, std = \
-        io.simulated_annealing(beta_init=1/500,
-                               length_markov_chain=length_chain)
+        io.simulated_annealing(length_markov_chain=length_chain)
     temp = 1 / betas
     me /= 100
     std /= 100
+    im = io.im
 
-    return temp, std, me
+    return temp, std, me, im
 
 
 def gen_initbeta_set(io: IsingOptimiser, beta: float):
@@ -22,52 +23,56 @@ def gen_initbeta_set(io: IsingOptimiser, beta: float):
     temp = 1 / betas
     me /= 100
     std /= 100
-    return temp, std, me
+    im = io.im
+    return temp, std, me, im
 
 
 def gen_factor_set(io: IsingOptimiser, factor: float):
-    cnt, betas, me, std = io.simulated_annealing(cooling_factor=factor,
-                                                 beta_init=1/500)
+    cnt, betas, me, std = io.simulated_annealing(cooling_factor=factor)
     temp = 1 / betas
     me /= 100
     std /= 100
-    return temp, std, me
+    im = io.im
+    return temp, std, me, im
 
 
 def gen_full_markov_set(io: IsingOptimiser):
-    lengths = np.array([1000, 2000, 3000])
-    temps, stds, mes = [], [], []
+    lengths = params.MARKOVS
+    temps, stds, mes, ims = [], [], [], []
     for l in lengths:
-        t, std, me = gen_markov_set(io, l)
+        t, std, me, im = gen_markov_set(io, l)
         temps.append(t)
         stds.append(std)
         mes.append(me)
+        ims.append(im)
         io.reset()
-    return temps, stds, mes
+    return temps, stds, mes, ims
 
 
 def gen_full_beta_set(io: IsingOptimiser):
-    beta_i = np.array([1 / 200, 1 / 300, 1/400])
-    temps, stds, mes = [], [], []
+    beta_i = params.BETAS
+    temps, stds, mes, ims = [], [], [], []
     for b in beta_i:
-        t, std, me = gen_initbeta_set(io, b)
+        t, std, me, im = gen_initbeta_set(io, b)
         temps.append(t)
         stds.append(std)
         mes.append(me)
+        ims.append(im)
         io.reset()
-    return temps, stds, mes
+    return temps, stds, mes, ims
 
 
 def gen_full_factor_set(io: IsingOptimiser):
-    factors = np.array([1.05, 1.08, 1.1])
-    temps, stds, mes = [], [], []
+    factors = params.FACTORS
+    temps, stds, mes, ims = [], [], [], []
     for f in factors:
-        t, std, me = gen_factor_set(io, f)
+        t, std, me, im = gen_factor_set(io, f)
         temps.append(t)
         stds.append(std)
         mes.append(me)
+        ims.append(im)
         io.reset()
-    return temps, stds, mes
+    return temps, stds, mes, ims
 
 
 def gen_paths(n: int, method: str):
@@ -79,28 +84,35 @@ def gen_paths(n: int, method: str):
     return path_in, path_out
 
 
-def gen_sets(method: str, n_spins: int = 50,
-             pickle_result: bool = True, plot_result: bool = False):
-    pathin, pathout = gen_paths(n_spins, method)
+def gen_io(method: str, pathin: str):
 
     with open(pathin, 'rb') as f:
         im_fr = pickle.load(f)
 
-    im_fr.remake_coupling_matrix(std=5)
-    io_fr = IsingOptimiser(im_fr, neighbourhood=2)
+    io = IsingOptimiser(im_fr, neighbourhood=2)
+    return io
+
+
+def gen_sets(method: str,
+             pickle_result: bool = True, plot_result: bool = False):
+    pathin, pathout = gen_paths(params.N_SPINS, method)
+    io_fr = gen_io(method, pathin)
 
     if method == "markov":
-        temps, stds, mes = gen_full_markov_set(io_fr)
+        temps, stds, mes, ims = gen_full_markov_set(io_fr)
     elif method == "beta":
-        temps, stds, mes = gen_full_beta_set(io_fr)
+        temps, stds, mes, ims = gen_full_beta_set(io_fr)
     elif method == "factor":
-        temps, stds, mes = gen_full_factor_set(io_fr)
+        temps, stds, mes, ims = gen_full_factor_set(io_fr)
+    else:
+        raise ValueError("No proper method given.")
 
     if pickle_result:
         with open(pathout, 'wb') as output:
             pickle.dump(temps, output)
             pickle.dump(mes, output)
             pickle.dump(stds, output)
+            pickle.dump(ims, output)
 
     if plot_result:
         plotIM.three_columns(temps, mes, stds)
