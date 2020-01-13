@@ -2,7 +2,10 @@ import copy
 import itertools
 from itertools import combinations
 import numpy as np
-import week_6.all_states as all_states
+import sys
+
+sys.path.append("../week_6")
+import all_states as all_states
 
 
 class IsingModel:

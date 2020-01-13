@@ -1,9 +1,12 @@
 import numpy as np
-
-from week_3.ising_model import IsingModel
 import copy
 import itertools
-import week_6.all_states as all_states
+import sys
+
+sys.path.append("../week_3")
+from ising_model import IsingModel
+sys.path.append("../week_6")
+import all_states as all_states
 
 class IsingEnsemble:
 

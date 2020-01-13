@@ -10,10 +10,14 @@ Assignment: Boltzmann
 
 # %% Importing modules
 import numpy as np
-from week_3.ising_model import IsingModel
-import week_6.all_states as all_states
-from week_6.ising_ensemble import IsingEnsemble
 import copy
+import sys
+
+sys.path.append("../week_3")
+from ising_model import IsingModel
+sys.path.append("../week_6")
+import all_states as all_states
+from ising_ensemble import IsingEnsemble
 
 
 # %% Defining functions
@@ -176,3 +180,29 @@ def state_probability_fraction(ie: IsingEnsemble, old_state, index: int):
                   (np.dot(ie.coupling_matrix[index, :], old_state) +
                    ie.threshold_vector[index])
                   )
+                  
+                  
+def read_salamander_expectations(filepath: str, n_spins: int):
+    expectation_vector_c = np.zeros(n_spins)
+    expectation_matrix_c = np.zeros((n_spins,n_spins))
+    
+    with open(filepath, 'r') as f:
+        firstline = f.readline()
+        for index, elt in enumerate(firstline.split()):
+            expectation_vector_c[index] = float(elt)
+        f.readline()
+        for index1, line in enumerate(f):
+            for index2, elt in enumerate(line.split()):
+                expectation_matrix_c[index1][index2] = float(elt)
+                
+    return expectation_vector_c, expectation_matrix_c
+                
+
+def mean_field_estimate(filepath: str, n_spins: int):
+    m, exp_matrix_c = read_salamander_expectations(filepath, n_spins)
+    C = exp_matrix_c - np.outer(m, m)
+    C_inv = np.linalg.inv(C)
+    coupling_matrix = 1/(1-np.tile(m,(n_spins,1))**2) * np.identity(n_spins) - C_inv
+    threshold_vector = np.arctanh(m) - np.inner(coupling_matrix, m)
+    
+    return coupling_matrix, threshold_vector
