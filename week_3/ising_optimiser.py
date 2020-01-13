@@ -70,7 +70,7 @@ class IsingOptimiser:
         return False
 
     def simulated_annealing(self,
-                            beta_init=-1, cooling_factor=1.05,
+                            beta_init=1/100, cooling_factor=1.09,
                             length_markov_chain=2000, n_betas=1000):
         """
         Copy-paste of simulated annealing method delivered to us in the
@@ -85,6 +85,9 @@ class IsingOptimiser:
         :return:
         """
         print("Optimising using simulated annealing.")
+        print("----")
+        print("beta init:", beta_init, ", cooling factor:", cooling_factor,
+              ", markov chain:", length_markov_chain)
         print("[", end='')
 
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
