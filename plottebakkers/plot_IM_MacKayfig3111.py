@@ -1,19 +1,19 @@
 import pickle
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 
 from week_3 import params
 
 
 def loadpickles():
-    with open("../data/picklejar/IM_sa_fer.pkl", "rb") as f:
-        cnt_fer = pickle.load(f)
+    picklejar = "../data/picklejar/"
+    fer_file = "io_fer_solved.pkl"
+    fr_file = "io_fr_solved.pkl"
+    with open("{}{}".format(picklejar, fer_file), "rb") as f:
         betas_fer = pickle.load(f)
         me_fer = pickle.load(f) / 100
         stde_fer = pickle.load(f) / 100
 
-    with open("../data/picklejar/IM_sa_fr.pkl", "rb") as f:
-        cnt_fr = pickle.load(f)
+    with open("{}{}".format(picklejar, fr_file), "rb") as f:
         betas_fr = pickle.load(f)
         me_fr = pickle.load(f) / 100
         stde_fr = pickle.load(f) / 100
@@ -35,8 +35,9 @@ def init_plot(nrows, ncols):
     return fig, ax
 
 
-def plotfig(temp_fer, std_fer, me_fer,
-            temp_fr, std_fr, me_fr):
+def plot_mckay():
+    me_fer, std_fer, temp_fer, me_fr, std_fr, temp_fr = loadpickles()
+
     fig, ax = init_plot(2, 2)
 
     ax[0][0].set_xscale('log')  # Set x scale of entire plot
@@ -62,7 +63,17 @@ def plotfig(temp_fer, std_fer, me_fer,
     # plt.savefig("../data/McKayFig3111.png")
 
 
-def three_columns(x_data, y1_data, y2_data, method: str):
+def plot_paramtest(method: str):
+    picklejar = "../data/picklejar/"
+    infile = "sa_{}_n50.pkl".format(method)
+    with open("{}{}".format(picklejar, infile), 'rb') as f:
+        temps = pickle.load(f)
+        mes = pickle.load(f)
+        stds = pickle.load(f)
+
+    three_columns(temps, mes, stds, method, show=False)
+
+def three_columns(x_data, y1_data, y2_data, method: str, show = True):
     fig, ax = init_plot(2, 3)
 
     ax[0][0].set_xscale('log')  # Set x scale of entire plot
@@ -91,4 +102,8 @@ def three_columns(x_data, y1_data, y2_data, method: str):
     else:
         raise ValueError("No proper method given.")
     ax[1][1].set_xlabel("Temperature")
-    fig.show()
+
+    if show:
+        fig.show()
+    else:
+        plt.savefig("../data/paramtest_{}.png".format(method))
