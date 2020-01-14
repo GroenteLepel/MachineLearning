@@ -5,7 +5,7 @@ import plottebakkers.plot_IM_MacKayfig3111 as plotIM
 import pickle
 
 #%% Recreating McKay
-# picklejar = "../data/picklejar/"
+picklejar = "../data/picklejar/"
 #
 # file = "im_ferromagnetic_n50.pkl"
 # print("{}{}".format(picklejar, file))
@@ -33,9 +33,9 @@ import pickle
 #     pickle.dump(me, output)
 #     pickle.dump(stde, output)
 
-plotIM.plot_paramtest("markov")
-plotIM.plot_paramtest("beta")
-plotIM.plot_paramtest("factor")
+# plotIM.plot_paramtest("markov")
+# plotIM.plot_paramtest("beta")
+# plotIM.plot_paramtest("factor")
 
 #%% Testing parameters
 # temps, mes, stds, ims = gen_sets.gen_sets("markov", plot_result=True)
@@ -63,3 +63,25 @@ plotIM.plot_paramtest("factor")
 # array([-1.62368369, -1.61763135, -1.61375484])
 # mins.std(axis=0)
 # array([0.026696  , 0.02260477, 0.04707917])
+
+#%% n = 200
+
+import numpy as np
+
+# np.random.seed(0)
+# im = IsingModel(200, True, False)
+# io = IsingOptimiser(im, 2)
+# dump, beta, me, stde = io.optimise('sa')
+# temp = 1 / beta
+# me = me / 100
+
+with open("{}sa_n200.pkl".format(picklejar), 'rb') as f:
+    # pickle.dump(temp, f)
+    # pickle.dump(me, f)
+    # pickle.dump(stde, f)
+
+    temp = pickle.load(f)
+    me = pickle.load(f)
+    stde = pickle.load(f)
+
+plotIM.plot_sa(temp, me, stde, show=False)
