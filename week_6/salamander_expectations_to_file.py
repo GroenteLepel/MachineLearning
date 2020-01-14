@@ -50,5 +50,3 @@ def get_clamped_expectations_from_file(readfilepath: str, writefilepath: str):
             f.write('\n')      
               
     return expectation_vector_c, expectation_matrix_c
-
-get_clamped_expectations_from_file('../data/salamander_retina.txt', '../data/salamander_retina_expectations.txt')
