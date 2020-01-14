@@ -126,6 +126,8 @@ def find_min_spread(method: str, steps: int = 10):
     io_fr = gen_io(method, pathin)
 
     for i in range(steps):
+        print("Step ", i)
+        print("==========")
         if method == "markov":
             temps, stds, mes, ims = gen_full_markov_set(io_fr)
             for j in range(3):
