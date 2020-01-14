@@ -88,7 +88,7 @@ class IsingOptimiser:
         print("----")
         print("beta init:", beta_init, ", cooling factor:", cooling_factor,
               ", markov chain:", length_markov_chain)
-        print("[", end='')
+        print("|", end='')
 
         mean_energies = np.zeros(n_betas)  # Stores the mean energy at each beta
         stdev_energies = np.zeros(n_betas)  # Stores std energy at each beta
@@ -99,9 +99,9 @@ class IsingOptimiser:
             max_de = self.im.estimate_max_energy_diff(self.neighbourhood)
             beta_init = 1 / max_de  # sets initial temperature
 
-        beta_list = beta_init * np.logspace(1, n_betas,
-                                            num=n_betas, base=cooling_factor)
+        logs = np.logspace(1, n_betas, num=n_betas, base=cooling_factor)
 
+        beta_list = beta_init * logs
         # Check energy of current state
         current_energy = self.im.ising_energy()
         t_count = 0
@@ -135,14 +135,16 @@ class IsingOptimiser:
             mean_energies[t_count] = np.mean(tmp_energy_array)
             stdev_energies[t_count] = np.std(tmp_energy_array)
 
-            if t_count % 10 == 0:
-                print("=", end='')
+            percentage = (1 - (beta_init / beta_list[t_count])) * 100
+            if percentage % 2 < 1:
+                print("█", end='')
+                # print((beta_init / beta_list[t_count]) * 100)
             # if t_count % 100 == 0:
             #     print('{}: mean: {}, stdev: {}.'.format(t_count,
             #                                             mean_energies[t_count],
             #                                             stdev_energies[
             #                                                 t_count]))
 
-        print("]")
+        print("|")
         return t_count, beta_list[:t_count], \
                mean_energies[:t_count], stdev_energies[:t_count]
