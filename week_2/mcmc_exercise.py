@@ -1,16 +1,12 @@
 from week_2.p_star_distribution import p_star_distribution, objective_function
 import numpy as np
 from week_2.metropolis_hastings import metropolis_hastings
-import matplotlib.pyplot as plt
+from plottebakkers import plot_mcmc
 import functools
 
 
 def circle(x):
     return x[0] ** 2 + x[1] ** 2
-
-
-def line(x, w0, w1, w2):
-    return -(w1 * x + w0) / w2
 
 
 np.random.seed(2)
@@ -45,30 +41,5 @@ for i, s in enumerate(samples[remove_first:]):
 # %% plotting
 w = samples[remove_first:]
 x_samples = np.linspace(2, 9, len(w))
-fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
-ax[0, 0].set_title(r'$w$ vs iteration')
-ax[0, 0].plot(w[:, 0], label=r'$w_1$')
-ax[0, 0].plot(w[:, 1], label=r'$w_2$')
-ax[0, 0].plot(w[:, 2], label=r'$w_3$')
-ax[0, 0].legend()
-
-ax[0, 1].set_title(r'$M$ vs iteration')
-ax[0, 1].plot(m_values)
-
-ax[1, 0].set_title(r'$(w_1, w_2)$ sampled after burn-in')
-ax[1, 0].scatter(w[:, 1], w[:, 2],
-                 marker='.')
-ax[1, 0].set_xlabel(r'$w_2$')
-ax[1, 0].set_ylabel(r'$w_1$')
-
-ax[1, 1].set_title('Bayesian solution')
-ax[1, 1].scatter(x[t == 0][:, 1], x[t == 0][:, 2],
-                 marker='+', linewidths=5, c='b')
-ax[1, 1].scatter(x[t == 1][:, 1], x[t == 1][:, 2],
-                 marker='o', linewidths=3, c='r')
-ax[1, 1].plot(x_samples, line(x_samples, w[-10, 0], w[-10, 1], w[-10, 2]),
-                 marker=',')
-ax[1, 1].set_ylim(1.9, 7.1)
-
-plt.show()
+plot_mcmc.plotfig(w, m_values, x, x_samples, t)
