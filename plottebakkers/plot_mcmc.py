@@ -43,15 +43,16 @@ def plot_spread(axes, weights):
     axes.set_ylabel(r'$w_1$')
 
 
-def plot_bayesian_solution(axes, weights, data, samples, labels):
+def plot_bayesian_solution(axes, weights, data, labels):
+    samples = np.linspace(2, 9, len(weights))
     axes.set_title('Bayesian solution')
     axes.scatter(data[labels == 0][:, 1], data[labels == 0][:, 2],
-                 marker='+', linewidths=5, c='b')
+                 marker='v', linewidths=3, c='black')
     axes.scatter(data[labels == 1][:, 1], data[labels == 1][:, 2],
-                 marker='o', linewidths=3, c='r')
-    axes.plot(samples,
-              line(samples, weights[-10, 0], weights[-10, 1], weights[-10, 2]),
-              marker=',')
+                 marker='o', linewidths=3, c='black')
+    # axes.plot(samples,
+    #           line(samples, weights[-10]),
+    #           c="black")
     axes.set_ylim(1.9, 7.1)
 
 
