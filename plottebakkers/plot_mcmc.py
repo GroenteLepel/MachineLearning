@@ -1,10 +1,26 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 DATAFOLDER = "../data/"
 
 
-def line(x, w0, w1, w2):
-    return -(w1 * x + w0) / w2
+def line(xgrid_transposed, w):
+    return -(w[:, 1] * xgrid_transposed + w[:, 0]) / w[:, 2]
+
+
+def propability_grid(weights):
+    xmin, xmax = 1, 10
+    ymin, ymax = 1, 8
+    nsteps = complex(0, len(weights))
+    grid = np.mgrid[xmin:xmax:nsteps, ymin:ymax:nsteps]
+
+    xrange = grid[0, :, 0]
+    yrange = grid[1, 0, :]
+
+    #generate the xgrid (tranposed by default)
+    xgrid = grid[0, :, :]
+
+    lines = line(xgrid, weights)
 
 
 def plot_w_vs_iteration(axes, weights):
@@ -39,7 +55,7 @@ def plot_bayesian_solution(axes, weights, data, samples, labels):
     axes.set_ylim(1.9, 7.1)
 
 
-def plotfig(weights, m_values, data, samples, labels,
+def plotfig(weights, m_values, data, labels,
             show: bool = True, fname: str = ""):
     fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
@@ -49,7 +65,7 @@ def plotfig(weights, m_values, data, samples, labels,
 
     plot_spread(ax[1, 0], weights)
 
-    plot_bayesian_solution(ax[1, 1], weights, data, samples, labels)
+    plot_bayesian_solution(ax[1, 1], weights, data, labels)
 
     if show:
         fig.show()
