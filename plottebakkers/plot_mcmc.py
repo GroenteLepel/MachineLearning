@@ -4,23 +4,81 @@ import numpy as np
 DATAFOLDER = "../data/"
 
 
-def line(xgrid_transposed, w):
-    return -(w[:, 1] * xgrid_transposed + w[:, 0]) / w[:, 2]
+def line(grid, weights):
+    # generate the xgrid (tranposed by default)
+    xgrid_transposed = grid[0, :, :]
+    return -(weights[:, 1] * xgrid_transposed + weights[:, 0]) / weights[:, 2]
+
+
+def outer_points(grid, weights):
+    """
+    Calculate the rightmost and leftmost points of the lines created by the
+    weights delivered.
+    :param grid: grid used to generate the lines in.
+    :param weights: the weights used to calculate the lines, where the lines
+    go by the function -(w[1] * x + w[0]) / w[2].
+    :return: Array of shape (len(grid), 4) with the first to indicating the
+    point p with the minimal x- and y-value, and the last two indicating point
+    q with max x- and y-value.
+    """
+    x_lims = np.array([grid[0, 0, :], grid[0, -1, :]])
+    line_lims = -(weights[:, 1] * x_lims + weights[:, 0]) / weights[:, 2]
+
+    mins = np.array([x_lims[0], line_lims[0]]).transpose()
+    maxs = np.array([x_lims[1], line_lims[1]]).transpose()
+
+    return np.concatenate((mins, maxs), axis=1)
+
+
+def orientation(p, q, r):
+    """
+    Calculates the orientation of point r with the line between point p and q
+    :param p: 2D (x, y) leftmost point of the line
+    :param q: 2D (x, y) rightmost point of the line
+    :param r: 2D (x, y) point where the orientation must be determined of
+    :return: NxN grid with percentages of how much lines are right to the points
+    """
+    # len-4000 vectors
+    dx = q[0] - p[0]
+    dy = q[1] - p[1]
+
+    # size 4000, 4000 matrix (the grid)
+    r_xdiff = (r[0] - q[0])
+    r_ydiff = (r[1] - q[1])
+    cnt = np.zeros(shape=(len(r_xdiff), len(r_ydiff)))
+
+    print("|", end='')
+    for i, (x, y) in enumerate(zip(dx, dy)):
+        if i / len(q[0]) * 100 % 5 == 0:
+            print("█", end='')
+        val = y * r_xdiff - x * r_ydiff
+        cnt += np.sign(val)
+
+    print("|")
+
+    # Scale the array between 0 and 1, 0 meaning all right.
+    percentage_clockwise = cnt / (2 * np.max(cnt)) + 0.5
+
+    return percentage_clockwise
+
+
+def clockwise(p, q, r):
+    return orientation(p, q, r) == 1
 
 
 def propability_grid(weights):
-    xmin, xmax = 1, 10
-    ymin, ymax = 1, 8
-    nsteps = complex(0, len(weights))
-    grid = np.mgrid[xmin:xmax:nsteps, ymin:ymax:nsteps]
+    x_min, x_max = 1, 10
+    y_min, y_max = 1, 8
+    n_steps = complex(0, len(weights))
+    grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
 
-    xrange = grid[0, :, 0]
-    yrange = grid[1, 0, :]
+    x_range = grid[0, :, 0]
+    y_range = grid[1, 0, :]
 
-    #generate the xgrid (tranposed by default)
-    xgrid = grid[0, :, :]
-
-    lines = line(xgrid, weights)
+    # generate array of lines, where the first index indicates the line, and the
+    #  second index indicates the y-coordinate of the line.
+    lines = line(grid, weights)
+    op = outer_points(grid, weights)
 
 
 def plot_w_vs_iteration(axes, weights):
