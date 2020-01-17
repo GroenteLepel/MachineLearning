@@ -43,8 +43,8 @@ def orientation(p, q, r):
     dy = q[1] - p[1]
 
     # size 4000, 4000 matrix (the grid)
-    r_xdiff = (r[0] - q[0])
-    r_ydiff = (r[1] - q[1])
+    r_xdiff = (r[0] - q[0][0])
+    r_ydiff = (r[1] - q[1][0])
     cnt = np.zeros(shape=(len(r_xdiff), len(r_ydiff)))
 
     print("|", end='')
@@ -60,10 +60,6 @@ def orientation(p, q, r):
     percentage_clockwise = cnt / (2 * np.max(cnt)) + 0.5
 
     return percentage_clockwise
-
-
-def clockwise(p, q, r):
-    return orientation(p, q, r) == 1
 
 
 def propability_grid(weights):
@@ -104,6 +100,28 @@ def plot_spread(axes, weights):
 def plot_bayesian_solution(axes, weights, data, labels):
     samples = np.linspace(2, 9, len(weights))
     axes.set_title('Bayesian solution')
+
+    xmin, xmax = 1, 10
+    ymin, ymax = 1, 8
+    # For now the calculation only works if resolution is len(w). This should
+    #  not be the case, so some calculation changes might be made.
+    resolution = len(weights)
+    nsteps = complex(0, resolution)
+    grid = np.mgrid[xmin:xmax:nsteps, ymin:ymax:nsteps]
+
+    # Generate array containing the rightmost and leftmost points of all the
+    #  lines.
+    ops = outer_points(grid, weights)
+    # Split the array into two: the rightmost (p) and the leftmost (q)
+    p = ops[:, :2].transpose()
+    q = ops[:, 2:].transpose()
+
+    # Calculate the probability grid of how many lines are clockwise to each
+    #  coordinate in the grid.
+    probability = orientation(p, q, grid)
+
+    axes.pcolormesh(grid[0], grid[1], probability)
+
     axes.scatter(data[labels == 0][:, 1], data[labels == 0][:, 2],
                  marker='v', linewidths=3, c='black')
     axes.scatter(data[labels == 1][:, 1], data[labels == 1][:, 2],
