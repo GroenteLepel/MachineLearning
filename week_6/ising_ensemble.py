@@ -62,8 +62,11 @@ class IsingEnsemble:
 
         return normalisation_constant
 
-    def update_normalisation_constants(self):
-        self.normalisation_constant = self._find_normalisation_constant()
+    def update_normalisation_constants(self, normalisation_constant = 0):
+        if normalisation_constant == 0:
+            self.normalisation_constant = self._find_normalisation_constant()
+        else:
+            self.normalisation_constant = normalisation_constant
         for model in self.state_set:
             model.set_normalisation_constant(self.normalisation_constant)
 

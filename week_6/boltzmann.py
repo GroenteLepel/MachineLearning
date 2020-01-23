@@ -67,15 +67,15 @@ def boltzmann_optimiser(ie: IsingEnsemble,
 
 
 def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100):
-    if method == 'exact':
-        return diff_llh > 1e-3
-    else:
-        return iterations < iterations_bound
-        #return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
+#    if method == 'exact':
+    return diff_llh > 1e-2
+#    else:
+#        return iterations < iterations_bound
+#        return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
 
 
 def optimise(ie: IsingEnsemble, eta: float,
-             method: str, output: bool, n_MC_samples: int = 500, iterations_bound: int = 100):
+             method: str, output: bool, n_MC_state_samples: int = 500, iterations_bound: int = 100):
     # Initialise criterion value
     likelihood = np.zeros(int(1e5))
     cnt = 0
@@ -97,7 +97,7 @@ def optimise(ie: IsingEnsemble, eta: float,
             if output:
                 print("==", end='')
             for j in range(i + 1, ie.n_spins):
-                double_expec, last_sample = give_expectation(method, ie, i, j, n_MC_samples = n_MC_samples, last_sample = last_sample)
+                double_expec, last_sample = give_expectation(method, ie, i, j, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
 
                 llh_grad_w = ie.expectation_matrix_c[i][j] - double_expec
 
@@ -106,7 +106,7 @@ def optimise(ie: IsingEnsemble, eta: float,
                 if ie.n_spins <= 10:
                     ie.update_normalisation_constants()
 
-            single_expec, last_sample = give_expectation(method, ie, i, n_MC_samples = n_MC_samples, last_sample = last_sample)
+            single_expec, last_sample = give_expectation(method, ie, i, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
             
             llh_grad_t = ie.expectation_vector_c[i] - single_expec
 
@@ -119,35 +119,93 @@ def optimise(ie: IsingEnsemble, eta: float,
 
         if ie.n_spins <= 10:
             likelihood[cnt] = ie.LLH()
+        else:
+            ie.normalisation_constant = estimate_normalisation_constant(ie)
+            ie.update_normalisation_constants(normalisation_constant = ie.normalisation_constant)
+            likelihood[cnt] = ie.LLH()
 
         if output:
             print("3]")
-            if ie.n_spins <= 10:
-                print("Log-likelihood:", likelihood[cnt])
-            if method == 'mc':
-                print("dw_avg:", dw_avg, "dtheta_avg:", dtheta_avg)
-                eta *= 0.98
-                print('eta', eta)
+#            if ie.n_spins <= 10:
+            print("Log-likelihood:", likelihood[cnt])
+#            if method == 'mc':
+#                print("dw_avg:", dw_avg, "dtheta_avg:", dtheta_avg)
+#                eta *= 0.98
+#                print('eta', eta)
             print("---\n")
         
-        if method == 'exact':
-            diff_llh = np.abs(likelihood[cnt] - likelihood[cnt - 1])
+#        if method == 'exact':
+        diff_llh = np.abs(likelihood[cnt] - likelihood[cnt - 1])
             
         cnt += 1
     
-    if ie.n_spins <= 10:
-        return ie.coupling_matrix, ie.threshold_vector, likelihood[:cnt], cnt
+#    if ie.n_spins <= 10:
+    return ie.coupling_matrix, ie.threshold_vector, likelihood[:cnt], cnt
+#    else:
+#        return ie.coupling_matrix, ie.threshold_vector, cnt
+    
+
+#def LLH_estimate(normalisation_constant, state_set, coupling_matrix, threshold_vector):
+#    loglikelihood = 0
+#    for state in state_set:
+#        loglikelihood += np.log(1./ normalisation_constant * pstar_BG(state, coupling_matrix, threshold_vector))
+#    return 1. / len(state_set) * loglikelihood
+
+
+def n_salamander_states_to_ie(filepath: str, n_salamander_states: int = 160):
+    state_set = np.zeros(shape=(n_salamander_states, 160))
+    ie = IsingEnsemble(n_salamander_states, 160, frustrated = True)
+    
+    with open(filepath, 'r') as f:
+        for neuronindex, line in enumerate(f):
+            linesplit = line.split()
+            for stateindex, elt in enumerate(linesplit[:n_salamander_states]):
+                eltint = int(elt)
+                if eltint == 0:
+                    eltint = -1
+                state_set[stateindex][neuronindex] = eltint
+                
+    for stateindex, state in enumerate(state_set):
+        ie.state_set[stateindex].state = state
+
+    return ie
+    
+    
+def estimate_normalisation_constant(ie: IsingEnsemble):
+    n_spins = len(ie.threshold_vector)
+    if 2**n_spins < 1e4:
+        n_MC_NC_samples = 0.5 * 2**n_spins
     else:
-        return ie.coupling_matrix, ie.threshold_vector, cnt
+        n_MC_NC_samples = n_spins ** 2
+    scaling_factor = 2**n_spins / n_MC_NC_samples
+    
+    normalisation_constant_estimate = 0
+    for _ in range(n_MC_NC_samples):
+        sample_state = np.random.choice([-1, 1], size=n_spins)
+        normalisation_constant_estimate += pstar_BG(sample_state, ie.coupling_matrix, ie.threshold_vector)
+    
+    return normalisation_constant_estimate * scaling_factor
 
 
-def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, n_MC_samples: int = 500, last_sample = []):
+def pstar_BG(state, coupling_matrix, threshold_vector):
+    """
+    Computes the Boltzmann-Gibbs probability without dividing by the
+    normalisation constant, called pstar. This is needed to estimate the
+    normalisation constant.
+    """
+    ising_energy = -0.5 * np.dot(state, np.dot(coupling_matrix, state)) \
+           - np.dot(threshold_vector, state)
+
+    return np.exp(-ising_energy)
+
+
+def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, n_MC_state_samples: int = 500, last_sample = []):
     if method == '' or method == 'exact':
         expec = exact_expectation(ie.coupling_matrix,
                                   ie.threshold_vector,
                                   ie.normalisation_constant, i, j)
     elif method == 'mc':
-        expec, last_sample = get_that_motherfucking_mc_exp_value(ie, i, j, n_MC_samples, last_sample = last_sample)
+        expec, last_sample = get_that_motherfucking_mc_exp_value(ie, i, j, n_MC_state_samples, last_sample = last_sample)
     else:
         raise ValueError(
             "No proper method given. Choose 'exact' or 'mc'.")
@@ -163,7 +221,7 @@ def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, n_MC_s
 
 def get_that_motherfucking_mc_exp_value(ie: IsingEnsemble,
                                         i_index: int, j_index: int = -1,
-                                        n_MC_samples: int = 500, last_sample = []):
+                                        n_MC_state_samples: int = 500, last_sample = []):
     if last_sample == []:
         if np.average(ie.expectation_vector_c) < -0.5:
             last_sample = np.array([-1] * ie.n_spins)
@@ -171,7 +229,7 @@ def get_that_motherfucking_mc_exp_value(ie: IsingEnsemble,
             last_sample = np.random.choice([-1,1], size=(ie.n_spins,))
             
     expectation_value = 0
-    for i in range(1, n_MC_samples + 1):
+    for i in range(1, n_MC_state_samples + 1):
         new_sample = gen_new_state(ie, last_sample)
         if j_index >= 0:
             expectation_value += new_sample[i_index] * new_sample[j_index]
@@ -180,7 +238,7 @@ def get_that_motherfucking_mc_exp_value(ie: IsingEnsemble,
 
         last_sample = copy.deepcopy(new_sample)
 
-    return expectation_value / n_MC_samples, last_sample
+    return expectation_value / n_MC_state_samples, last_sample
 
 
 def gen_new_state(ie: IsingEnsemble, old_state):
@@ -222,7 +280,7 @@ def mean_field_estimate(expectation_matrix_c, expectation_vector_c):
     m = expectation_vector_c
     C = expectation_matrix_c - np.outer(m, m)
     C_inv = np.linalg.inv(C)
-    coupling_matrix = 1/(1-np.tile(m,(n_spins,1))**2) * np.identity(n_spins) - C_inv
+    coupling_matrix = np.multiply(1/(1-np.tile(m,(n_spins,1))**2), np.identity(n_spins)) - C_inv
     threshold_vector = np.arctanh(m) - np.inner(coupling_matrix, m)
     
     return coupling_matrix, threshold_vector
