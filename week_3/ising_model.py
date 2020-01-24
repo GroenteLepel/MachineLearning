@@ -99,7 +99,7 @@ class IsingModel:
         """
         if self.normalisation_constant == 0:
             self.update_normalisation_constant()
-
+            
         return 1. / self.normalisation_constant * np.exp(-self.ising_energy())
 
     def estimate_max_energy_diff(self, neighbourhood):

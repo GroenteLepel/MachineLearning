@@ -68,6 +68,7 @@ def boltzmann_optimiser(ie: IsingEnsemble,
 
 def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100):
 #    if method == 'exact':
+    return iterations < iterations_bound
     return diff_llh > 1e-2
 #    else:
 #        return iterations < iterations_bound
