@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import week_2.p_star_distribution as pstar
 
 DATAFOLDER = "../data/"
 
@@ -10,71 +11,30 @@ def line(grid, weights):
     return -(weights[:, 1] * xgrid_transposed + weights[:, 0]) / weights[:, 2]
 
 
-def outer_points(grid, weights):
+def orientation(weights, grid):
     """
-    Calculate the rightmost and leftmost points of the lines created by the
-    weights delivered.
-    :param grid: grid used to generate the lines in.
-    :param weights: the weights used to calculate the lines, where the lines
-    go by the function -(w[1] * x + w[0]) / w[2].
-    :return: Array of shape (len(grid), 4) with the first to indicating the
-    point p with the minimal x- and y-value, and the last two indicating point
-    q with max x- and y-value.
+    Calculates the dot product of the provided weights with the xy-values of the
+    grid.
+    :param weights: n by 3 dimensional vector, where n is the amount of data
+    points, 0 is the bias variable, 1 in the x direction and 2 in the y.
+    :param grid: 2rr-dimensional tensor, with r the resolution of the grid.
+
+    :return: rr-dimensional matrix with at each point a percentage of how
+    many lines classify that xy-coordinate as + or - 1.
     """
-    x_lims = np.array([grid[0, 0, :], grid[0, -1, :]])
-    line_lims = -(weights[:, 1] * x_lims + weights[:, 0]) / weights[:, 2]
-
-    mins = np.array([x_lims[0], line_lims[0]]).transpose()
-    maxs = np.array([x_lims[1], line_lims[1]]).transpose()
-
-    return np.concatenate((mins, maxs), axis=1)
-
-
-def orientation(p, q, r):
-    """
-    Calculates the orientation of point r with the line between point p and q
-    :param p: 2D (x, y) leftmost point of the line
-    :param q: 2D (x, y) rightmost point of the line
-    :param r: 2D (x, y) point where the orientation must be determined of
-    :return: NxN grid with percentages of how much lines are right to the points
-    """
-    # len-4000 vectors
-    dx = q[0] - p[0]
-    dy = q[1] - p[1]
-
-    # size 4000, 4000 matrix (the grid)
-    r_xdiff = (r[0] - q[0][0])
-    r_ydiff = (r[1] - q[1][0])
-    cnt = np.zeros(shape=(len(r_xdiff), len(r_ydiff)))
-
+    cnt = np.zeros(shape=(np.shape(grid[0])))
     print("|", end='')
-    for i, (x, y) in enumerate(zip(dx, dy)):
-        if i / len(q[0]) * 100 % 5 == 0:
+    for i, w in enumerate(weights):
+        if i / len(weights) * 100 % 5 == 0:
             print("█", end='')
-        val = y * r_xdiff - x * r_ydiff
-        cnt += np.sign(val)
-
+        prod = w[0] + w[1] * grid[0] + w[2] * grid[1]
+        prod[prod < 0] = 0
+        cnt += np.sign(prod)
     print("|")
 
-    # Scale the array between 0 and 1, 0 meaning all right.
-    percentage_clockwise = cnt / (2 * np.max(cnt)) + 0.5
-
-    return percentage_clockwise
-
-
-def propability_grid(weights):
-    x_min, x_max = 1, 10
-    y_min, y_max = 1, 8
-    n_steps = complex(0, len(weights))
-    grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
-
-    x_range = grid[0, :, 0]
-    y_range = grid[1, 0, :]
-
-    # generate array of lines, where the first index indicates the line, and the
-    #  second index indicates the y-coordinate of the line.
-    lines = line(grid, weights)
-    op = outer_points(grid, weights)
+    # Normalize to a percentage
+    cnt = cnt / len(weights[0])
+    return cnt
 
 
 def plot_w_vs_iteration(axes, weights):
@@ -90,9 +50,10 @@ def plot_m_vs_iteration(axes, m_values):
     axes.plot(m_values)
 
 
-def plot_spread(axes, weights):
+def plot_spread(axes, travel, weights):
     axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
-    axes.scatter(weights[:, 1], weights[:, 2], marker='.')
+    axes.scatter(weights[:, 1], weights[:, 2], marker='.', c="black")
+    axes.plot(travel[:, 1], travel[:, 2], c="red")
     axes.set_xlabel(r'$w_2$')
     axes.set_ylabel(r'$w_1$')
 
@@ -105,20 +66,11 @@ def plot_bayesian_solution(axes, weights, data, labels):
     ymin, ymax = 1, 8
     # For now the calculation only works if resolution is len(w). This should
     #  not be the case, so some calculation changes might be made.
-    resolution = len(weights)
+    resolution = 100
     nsteps = complex(0, resolution)
     grid = np.mgrid[xmin:xmax:nsteps, ymin:ymax:nsteps]
 
-    # Generate array containing the rightmost and leftmost points of all the
-    #  lines.
-    ops = outer_points(grid, weights)
-    # Split the array into two: the rightmost (p) and the leftmost (q)
-    p = ops[:, :2].transpose()
-    q = ops[:, 2:].transpose()
-
-    # Calculate the probability grid of how many lines are clockwise to each
-    #  coordinate in the grid.
-    probability = orientation(p, q, grid)
+    probability = orientation(weights, grid)
 
     axes.pcolormesh(grid[0], grid[1], probability)
 
@@ -132,15 +84,24 @@ def plot_bayesian_solution(axes, weights, data, labels):
     axes.set_ylim(1.9, 7.1)
 
 
-def plotfig(weights, m_values, data, labels,
+def plotfig(samples, data, labels,
             show: bool = True, fname: str = ""):
+    remove_first = 500
+
+    m_values = np.zeros(len(samples[remove_first:]))
+    for i, s in enumerate(samples[remove_first:]):
+        m_values[i] = pstar.objective_function(s, data, labels, 0.01)
+
+    travel = samples[:remove_first]
+    weights = samples[remove_first:]
+
     fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
     plot_w_vs_iteration(ax[0, 0], weights)
 
     plot_m_vs_iteration(ax[0, 1], m_values)
 
-    plot_spread(ax[1, 0], weights)
+    plot_spread(ax[1, 0], travel, weights)
 
     plot_bayesian_solution(ax[1, 1], weights, data, labels)
 
