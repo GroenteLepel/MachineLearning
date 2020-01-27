@@ -22,7 +22,8 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
     """
 
     samples = np.zeros((n_points, n_dims))
-    x = np.zeros(n_dims)
+    x = np.ones(n_dims) * -1
+    a_vals = np.zeros(n_points)
 
     for i in range(n_points):
         if i % (n_points / 4) == 0:
@@ -30,20 +31,38 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
         new_x = x + np.random.normal(size=n_dims, scale=0.1)
 
         counter = 0
-        if accept_exponent(current=objective_function(x, data, labels, 0.01),
-                           candidate=objective_function(new_x, data, labels, 0.01)):
+        a_vals[i] = accept_probability(
+            current=objective_function(x, data, labels, 0.01),
+            candidate=objective_function(new_x, data, labels, 0.01)
+        )
+        if accept_val(a_vals[i]):
             samples[i] = new_x
             x = new_x
         else:
             samples[i] = x
 
-    return samples
+    return samples, a_vals
 
 
 def accept_exponent(current, candidate, factor=1):
     difference = candidate - current
     a = np.exp(- factor * difference)
 
+    if a >= 1:
+        return True
+    elif np.random.rand() <= a:
+        return True
+    else:
+        return False
+
+
+def accept_probability(current, candidate, factor=1):
+    difference = candidate - current
+    a = np.exp(- factor * difference)
+    return a
+
+
+def accept_val(a):
     if a >= 1:
         return True
     elif np.random.rand() <= a:
