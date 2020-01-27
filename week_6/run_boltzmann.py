@@ -43,8 +43,9 @@ import boltzmann
 #%% Salamander
 n_spins = 160
 n_models = 283041
-n_MC_state_samples = 10
+n_MC_state_samples = 160**2
 n_salamander_data = 10
+max_iterations = 10
 eta_start = 0.1
 filepath_expectations = '../data/salamander_retina_expectations.txt'
 filepath_retina = '../data/salamander_retina.txt'
@@ -57,4 +58,4 @@ ie_n_salamander = boltzmann.n_salamander_states_to_ie(filepath_retina, n_salaman
 ie_n_salamander.expectation_matrix_c = copy.deepcopy(expectation_matrix_c_salamander)
 ie_n_salamander.expectation_vector_c = copy.deepcopy(expectation_vector_c_salamander)
 
-coupling_matrix_MC, threshold_vector_MC, llh_salamander, iterations_MC_salamander = boltzmann.optimise(ie_n_salamander, eta=eta_start, method='mc', n_MC_state_samples = n_MC_state_samples, output=True)
+coupling_matrix_MC, threshold_vector_MC, llh_salamander, iterations_MC_salamander = boltzmann.optimise(ie_n_salamander, eta=eta_start, method='mc', n_MC_state_samples = n_MC_state_samples, output=True, iterations_bound = max_iterations)

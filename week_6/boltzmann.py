@@ -12,6 +12,7 @@ Assignment: Boltzmann
 import numpy as np
 import copy
 import sys
+import os
 
 sys.path.append("../week_3")
 from ising_model import IsingModel
@@ -75,6 +76,17 @@ def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, i
 #        return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
 
 
+def print_output(iteration: int, total_spins: int, i: int, j: int = -1):
+    os.system('clear')
+    print("---")
+    print("Iteration", iteration + 1)
+    print("Updating spin {0:d}/{1:d}".format(i,total_spins))
+    print("w[{0:d}][_] \t theta[{1:d}]".format(i,i))
+        #print("Updating coupling matrix: w[{0:d}][{1:d}]".format(i,j))
+        #print("Updating threshold vector: theta[{0:d}]".format(i))
+    print("---")
+
+
 def optimise(ie: IsingEnsemble, eta: float,
              method: str, output: bool, n_MC_state_samples: int = 500, iterations_bound: int = 100):
     # Initialise criterion value
@@ -82,38 +94,41 @@ def optimise(ie: IsingEnsemble, eta: float,
     cnt = 0
     diff_llh = 123456
     likelihood[-1] = -1e5
-    last_sample = []
     dw_avg = 1e10
     dtheta_avg = 1e10
 
     while constraint(method, diff_llh, dw_avg = dw_avg, dtheta_avg = dtheta_avg, iterations = cnt, iterations_bound = iterations_bound):
-        if output:
-            print("---")
-            print("Iteration", cnt+1)
-            print("[c", end='')
         old_w = copy.copy(ie.coupling_matrix)
         old_t = copy.copy(ie.threshold_vector)
 
         for i in range(ie.n_spins):
             if output:
-                print("==", end='')
+                print_output(cnt, ie.n_spins, i)
             for j in range(i + 1, ie.n_spins):
-                double_expec, last_sample = give_expectation(method, ie, i, j, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
+                if ie.n_spins <= 10:
+                    ie.update_normalisation_constants()
+                else:
+                    ie.normalisation_constant = estimate_normalisation_constant(ie)
+                    ie.update_normalisation_constants(normalisation_constant = ie.normalisation_constant)
+                    
+                double_expec = give_expectation(method, ie, i, j, n_MC_state_samples = n_MC_state_samples)
 
                 llh_grad_w = ie.expectation_matrix_c[i][j] - double_expec
 
                 ie.coupling_matrix[i][j] += eta * llh_grad_w
                 ie.coupling_matrix[j][i] += eta * llh_grad_w
-                if ie.n_spins <= 10:
-                    ie.update_normalisation_constants()
-
-            single_expec, last_sample = give_expectation(method, ie, i, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
+                
+            if ie.n_spins <= 10:
+                ie.update_normalisation_constants()
+            else:
+                ie.normalisation_constant = estimate_normalisation_constant(ie)
+                ie.update_normalisation_constants(normalisation_constant = ie.normalisation_constant)
+                
+            single_expec = give_expectation(method, ie, i, n_MC_state_samples = n_MC_state_samples)
             
             llh_grad_t = ie.expectation_vector_c[i] - single_expec
 
             ie.threshold_vector[i] += eta * llh_grad_t
-            if ie.n_spins <= 10:
-                ie.update_normalisation_constants()
 
         dw_avg = np.abs(ie.coupling_matrix - old_w).sum()/len(ie.threshold_vector)**2
         dtheta_avg = np.abs(ie.threshold_vector - old_t).sum()/len(ie.threshold_vector)
@@ -177,7 +192,7 @@ def estimate_normalisation_constant(ie: IsingEnsemble):
     if 2**n_spins < 1e4:
         n_MC_NC_samples = 0.5 * 2**n_spins
     else:
-        n_MC_NC_samples = n_spins ** 2
+        n_MC_NC_samples = n_spins**2
     scaling_factor = 2**n_spins / n_MC_NC_samples
     
     normalisation_constant_estimate = 0
@@ -200,29 +215,57 @@ def pstar_BG(state, coupling_matrix, threshold_vector):
     return np.exp(-ising_energy)
 
 
-def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, n_MC_state_samples: int = 500, last_sample = []):
+def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, n_MC_state_samples: int = 500):
     if method == '' or method == 'exact':
         expec = exact_expectation(ie.coupling_matrix,
                                   ie.threshold_vector,
                                   ie.normalisation_constant, i, j)
     elif method == 'mc':
-        expec, last_sample = get_that_motherfucking_mc_exp_value(ie, i, j, n_MC_state_samples, last_sample = last_sample)
+        expec = get_that_motherfucking_mc_exp_value_v2(ie, i, j, n_MC_state_samples)
     else:
         raise ValueError(
             "No proper method given. Choose 'exact' or 'mc'.")
 
-    return expec, last_sample
+    return expec
 
 
 #def monte_carlo_optimise(ie: IsingEnsemble, eta: float, output: bool):
 #    likelihood = np.zeros(int(1e5))
 #
 #    expectation_value = get_that_motherfucking_mc_exp_value(ie)
+    
+
+def get_that_motherfucking_mc_exp_value_v2(ie: IsingEnsemble,
+                                        i_index: int, j_index: int = -1,
+                                        n_MC_state_samples: int = 500):
+    '''
+    This version of the function randomly takes some samples and averages them
+    to find the expectation value.
+    '''
+    expectation_value = 0
+    scaling_factor = 2**ie.n_spins / n_MC_state_samples
+    coupling_matrix = ie.coupling_matrix
+    threshold_vector = ie.threshold_vector
+    
+    for _ in range(n_MC_state_samples):
+        sample = np.random.choice([-1,1], size=(ie.n_spins,))
+        if j_index >= 0:
+            expectation_value += sample[i_index] * sample[j_index] * pstar_BG(sample, coupling_matrix, threshold_vector)
+        else:
+            expectation_value += sample[i_index] * pstar_BG(sample, coupling_matrix, threshold_vector)
+
+    print(1./ ie.normalisation_constant * expectation_value * scaling_factor)
+    return 1./ ie.normalisation_constant * expectation_value * scaling_factor
 
 
 def get_that_motherfucking_mc_exp_value(ie: IsingEnsemble,
                                         i_index: int, j_index: int = -1,
                                         n_MC_state_samples: int = 500, last_sample = []):
+    '''
+    This version of the function searches in a neighbourhood of the previous
+    sample. Which is not needed in this case I (Ludo) think. We need an average
+    , so we should not look at probable states or something.
+    '''
     if last_sample == []:
         if np.average(ie.expectation_vector_c) < -0.5:
             last_sample = np.array([-1] * ie.n_spins)
