@@ -84,16 +84,65 @@ def plot_bayesian_solution(axes, weights, data, labels):
     axes.set_ylim(1.9, 7.1)
 
 
-def plotfig(samples, data, labels,
-            show: bool = True, fname: str = ""):
-    remove_first = 500
+def determine_travel(accept_values):
+    """
+    Determines the length of the travel distance by taking the std of the accept
+    values and determining the derivative of this.
+    """
+    # Calculate the progressing std of the accept values, in the beginning this
+    #  should be chaotic, but eventually the std should decrease since the
+    #  accept values will reach values between 0 and 1.
+    stds = np.zeros(len(accept_values))
+    for i in range(len(accept_values)):
+        stds[i] = accept_values[:i].std()
 
-    m_values = np.zeros(len(samples[remove_first:]))
-    for i, s in enumerate(samples[remove_first:]):
+    # Calculate the derivative of these std values. We want to find the location
+    #  where the std starts to descent fluidly, this is where the accept values
+    #  start to reach the values between 0 and 1 (ignore the first one since
+    #  this is always nan).
+    std_diff = np.diff(stds)[1:]
+
+    # The descent starts once the std has a negative derivative. However, it can
+    #  happen that there will be a spike in the accept value, so locate the
+    #  spike, and repeat the process of finding the minimum.
+    start_descent = np.argmin(std_diff) + 2
+    while np.max(std_diff[start_descent:]) > 1:
+        start_descent += np.argmax(std_diff[start_descent:])
+        start_descent += np.argmin(std_diff[start_descent:]) + 1
+
+    # Skip to the place where the accept values will not deviate that strongly
+    #  anymore.
+    length = np.argmax(std_diff[start_descent:] > -0.01) + start_descent + 1
+
+    return length, stds
+
+
+def plot_travel(samples, accept_values):
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    travel_length, history = determine_travel(accept_values)
+
+    travel = samples[:travel_length]
+    weights = samples[travel_length:]
+
+    ax[0].set_title(r"$\sigma(a)$ up to $x$ vs. $x$")
+    ax[0].set_yscale('log')
+    ax[0].plot(np.arange(travel_length), history[:travel_length], c="red")
+    ax[0].plot(np.arange(travel_length, len(samples)), history[travel_length:], c="black")
+    plot_spread(ax[1], travel, weights)
+
+    fig.show()
+
+
+def plotfig(samples, accept_values, data, labels,
+            show: bool = True, fname: str = ""):
+    travel_length, dump = determine_travel(accept_values)
+
+    m_values = np.zeros(len(samples[travel_length:]))
+    for i, s in enumerate(samples[travel_length:]):
         m_values[i] = pstar.objective_function(s, data, labels, 0.01)
 
-    travel = samples[:remove_first]
-    weights = samples[remove_first:]
+    travel = samples[:travel_length]
+    weights = samples[travel_length:]
 
     fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
