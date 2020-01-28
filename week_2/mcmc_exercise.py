@@ -29,20 +29,11 @@ t = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
 
 # samples = metropolis_hastings(circle, n_dims=2, n_points=10000)
 
-samples = metropolis_hastings(functools.partial(p_star_distribution, x, t), x,
-                              t,
-                              n_points=1700)
-
-remove_first = 1000
-
-m_values = np.zeros(len(samples[remove_first:]))
-for i, s in enumerate(samples[remove_first:]):
-    m_values[i] = objective_function(s, x, t, 0.01)
+samples, a = metropolis_hastings(functools.partial(p_star_distribution, x, t),
+                                 x,
+                                 t,
+                                 n_points=1700)
 
 # %% plotting
-w = samples[remove_first:]
 
-fig, ax = plt.subplots(1, 1)
-
-plot_mcmc.plot_bayesian_solution(ax, w, x, t)
-plt.show()
+plot_mcmc.plot_travel(samples, a)
