@@ -12,13 +12,15 @@ def normal(x, mean=0):
            (np.sqrt(2 * np.pi) ** 3)
 
 
-def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
+def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3, spread=0.1):
     """
-    Method for sampling data from a distribution p
-    :param p: distribution to sample using this method
-    :param n_points: amount of points you want to sample from distribution p
-    :param n_dims: amount of dimensions of the points which are sampled
-    :return: array with shape (n_points, n_dims)
+    Method for sampling data from a distribution p.
+    :param p: distribution to sample using this method.
+    :param n_points: amount of points you want to sample from distribution p.
+    :param n_dims: amount of dimensions of the points which are sampled.
+    :param spread: determines the spread of the gaussian from which to draw
+    samples.
+    :return: array with shape (n_points, n_dims).
     """
 
     samples = np.zeros((n_points, n_dims))
@@ -28,7 +30,7 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3):
     for i in range(n_points):
         if i % (n_points / 4) == 0:
             print(i)
-        new_x = x + np.random.normal(size=n_dims, scale=0.1)
+        new_x = x + np.random.normal(size=n_dims, scale=spread)
 
         counter = 0
         a_vals[i] = accept_probability(
@@ -57,6 +59,9 @@ def accept_exponent(current, candidate, factor=1):
 
 
 def accept_probability(current, candidate, factor=1):
+    """
+    Same as accept_exponent, but returns the accept value for analysis.
+    """
     difference = candidate - current
     a = np.exp(- factor * difference)
     return a
