@@ -51,8 +51,9 @@ def plot_m_vs_iteration(axes, m_values):
 
 
 def plot_spread(axes, travel, weights):
+
     axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
-    axes.scatter(weights[:, 1], weights[:, 2], marker='.', c="black")
+    axes.plot(weights[:, 1], weights[:, 2], marker=',', c="black", linestyle='')
     axes.plot(travel[:, 1], travel[:, 2], c="red")
     axes.set_xlabel(r'$w_2$')
     axes.set_ylabel(r'$w_1$')
@@ -112,14 +113,14 @@ def determine_travel(accept_values):
 
     # Skip to the place where the accept values will not deviate that strongly
     #  anymore.
-    length = np.argmax(std_diff[start_descent:] > -2) + start_descent + 1
+    length = np.argmax(std_diff[start_descent:] > -3.5) + start_descent + 1
 
     return length, stds
 
 
 def plot_travel(samples, accept_values,
                 show: bool = True, file_name: str = ''):
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 2, figsize=(6, 2.5))
     travel_length, history = determine_travel(accept_values)
 
     travel = samples[:travel_length]
@@ -135,6 +136,8 @@ def plot_travel(samples, accept_values,
     ax[0].plot(x_pre_travel, history[:travel_length], c="red")
     ax[0].plot(x_post_travel, history[travel_length:], c="black")
     plot_spread(ax[1], travel, weights)
+
+    fig.tight_layout()
 
     if show:
         fig.show()
