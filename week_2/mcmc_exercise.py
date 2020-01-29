@@ -36,4 +36,4 @@ samples, a = metropolis_hastings(functools.partial(p_star_distribution, x, t),
 
 # %% plotting
 
-plot_mcmc.plot_travel(samples, a)
+plot_mcmc.plot_travel(samples, a, show=False)

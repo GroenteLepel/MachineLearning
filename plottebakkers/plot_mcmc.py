@@ -105,19 +105,20 @@ def determine_travel(accept_values):
     # The descent starts once the std has a negative derivative. However, it can
     #  happen that there will be a spike in the accept value, so locate the
     #  spike, and repeat the process of finding the minimum.
-    start_descent = np.argmin(std_diff) + 2
+    start_descent = np.argmax(stds) + 2
     while np.max(std_diff[start_descent:]) > 1:
         start_descent += np.argmax(std_diff[start_descent:])
         start_descent += np.argmin(std_diff[start_descent:]) + 1
 
     # Skip to the place where the accept values will not deviate that strongly
     #  anymore.
-    length = np.argmax(std_diff[start_descent:] > -0.01) + start_descent + 1
+    length = np.argmax(std_diff[start_descent:] > -2) + start_descent + 1
 
     return length, stds
 
 
-def plot_travel(samples, accept_values):
+def plot_travel(samples, accept_values,
+                show: bool = True, file_name: str = ''):
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
     travel_length, history = determine_travel(accept_values)
 
@@ -126,11 +127,22 @@ def plot_travel(samples, accept_values):
 
     ax[0].set_title(r"$\sigma(a)$ up to $x$ vs. $x$")
     ax[0].set_yscale('log')
-    ax[0].plot(np.arange(travel_length), history[:travel_length], c="red")
-    ax[0].plot(np.arange(travel_length, len(samples)), history[travel_length:], c="black")
+    ax[0].set_xlabel('number of samples')
+    ax[0].set_ylabel(r"$\sigma(a)$")
+
+    x_pre_travel = np.arange(travel_length)
+    x_post_travel = np.arange(travel_length, len(samples))
+    ax[0].plot(x_pre_travel, history[:travel_length], c="red")
+    ax[0].plot(x_post_travel, history[travel_length:], c="black")
     plot_spread(ax[1], travel, weights)
 
-    fig.show()
+    if show:
+        fig.show()
+    else:
+        if file_name == '':
+            file_name = 'log_std_vs_travel.png'
+        destination = '{}{}'.format(DATAFOLDER, file_name)
+        fig.savefig(destination)
 
 
 def plotfig(samples, accept_values, data, labels,
