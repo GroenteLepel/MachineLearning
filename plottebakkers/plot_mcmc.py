@@ -12,6 +12,8 @@ def line(grid, weights):
 
 
 def orientation(weights, grid):
+    # TODO: this should be a function in another file, not something for
+    #  plotting.
     """
     Calculates the dot product of the provided weights with the xy-values of the
     grid.
@@ -25,7 +27,7 @@ def orientation(weights, grid):
     cnt = np.zeros(shape=(np.shape(grid[0])))
     print("|", end='')
     for i, w in enumerate(weights):
-        if i / len(weights) * 100 % 5 == 0:
+        if i / len(weights) * 100 % 1 == 0:
             print("█", end='')
         prod = w[0] + w[1] * grid[0] + w[2] * grid[1]
         prod[prod < 0] = 0
