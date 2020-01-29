@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import week_2.p_star_distribution as pstar
 
-DATAFOLDER = "../data/"
+DATAFOLDER = "./data/"
 
 
 def line(grid, weights):
