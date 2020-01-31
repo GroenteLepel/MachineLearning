@@ -63,6 +63,9 @@ def sample(n_samples: int, data, labels,
 
     n_rejected = 0
 
+    print("Starting Longevin sampling method for {} samples.".format(n_samples))
+    print("===============")
+    print("|", end='')
     for i in range(1, n_samples):
         p = np.random.normal(size=3)  # initial momentum is Normal(0, 1)
         hamiltonian = np.dot(p, p) / 2 + es[i - 1]  # evaluate H(w, p)
@@ -93,5 +96,10 @@ def sample(n_samples: int, data, labels,
             ws[i] = ws[i - 1]
             gs[i] = gs[i - 1]
             es[i] = es[i - 1]
-    print("Rejected percentage:", n_rejected / n_samples * 100)
+
+        if i / n_samples * 100 % 5 == 0:
+            print("█", end='')
+
+    print("|")
+    print("Done. Rejected percentage:", n_rejected / n_samples * 100)
     return ws, gs, es
