@@ -12,18 +12,15 @@ Created on Tue Nov 26 14:45:41 2019
 
 def gradient_e(weights, data, labels, alpha):
     """
-    :return: gradient of E
+    :return: gradient of the objective function M(w).
     """
+    # compute the outputs from the activations a = x * w
     y = p_star.logistic(data, weights)
-    res = np.array([0, 0, 0])
-    for i in range(0, len(y)):
-        for j in range(0, 3):
-            dot_product = np.dot(weights, data[i])
-            res[j] = \
-                res[j] + \
-                labels[i] * y[i] * data[i, j] * np.exp(-dot_product) - \
-                (1 - labels[i]) * (1 - y[i]) * data[i, j] * np.exp(dot_product)
-    return res + alpha * weights
+    # compute the errors
+    errors = labels - y
+    # compute the gradient of G(w)
+    gradient = np.dot(- data.transpose(), errors)
+    return alpha * weights + gradient
 
 
 def accept(grad):
@@ -35,37 +32,45 @@ def accept(grad):
         return False
 
 
-def hamilton_optimizer(n_steps, data, labels,
-                       epsilon, alpha):
+def sample(n_samples: int, data, labels,
+           epsilon: float = 0.055, alpha: float = 0.01,
+           leap_frog_steps: int = 19):
     """
     Hamilton Monte Carlo method to sample from distribution, finetuned for
     the given p_star_distribution file.
-    :param n_steps: amount of steps for sampling.
+    :param n_samples: amount of steps for sampling.
     :param data: data to use to calculate the energy in p_star_distribution
     to sample the weights to.
     :param labels: labels corresponding to the data.
-    :param epsilon: size of the leap frog step.
-    :param alpha: factor for calculating the energy and gradient.
+    :param epsilon: size of the leap frog step. Default is 0.055 (from McKay).
+    :param alpha: factor for calculating the energy and gradient. Default is
+    0.01 (from McKay).
+    :param leap_frog_steps: number of leap frog steps the hamilton sampler
+    makes. Default is 19 (from McKay).
 
     :return: 3 arrays containing the sampled weights, the sampled gradients and
     sampled energies, of shapes (n_steps, 3), (n_steps, 3), (n_steps).
     """
     # initialise arrays for storing
-    ws = np.zeros(shape=(n_steps, 3))  # weights
-    gs = np.zeros(shape=(n_steps, 3))  # gradients
-    es = np.zeros(shape=n_steps)  # objective functions
+    ws = np.ones(shape=(n_samples, 3))  # weights
+    gs = np.zeros(shape=(n_samples, 3))  # gradients
+    es = np.zeros(shape=n_samples)  # objective functions
 
+    # initialise the first elements in the saved arrays, w[0] is only ones
+    # ws[0] = ws[0] * -3.
     gs[0] = gradient_e(ws[0], data, labels, alpha)
     es[0] = p_star.objective_function(ws[0], data, labels, alpha)
 
-    for i in range(1, n_steps):
+    n_rejected = 0
+
+    for i in range(1, n_samples):
         p = np.random.normal(size=3)  # initial momentum is Normal(0, 1)
-        hamiltonian = np.dot(p, p) / 2 + es[i-1]  # evaluate H(w, p)
-        w_new = ws[i-1]
-        g_new = gradient_e(w_new, data, labels, alpha)
+        hamiltonian = np.dot(p, p) / 2 + es[i - 1]  # evaluate H(w, p)
+        w_new = ws[i - 1]
+        g_new = gs[i - 1]
 
         # make tau 'leapfrog' steps
-        for tau in range(10):
+        for tau in range(leap_frog_steps):
             p = p - epsilon * g_new / 2  # make half-step in p
             w_new = w_new + epsilon * p  # make step in w
             g_new = gradient_e(w_new, data, labels, alpha)  # find new gradient
@@ -78,11 +83,15 @@ def hamilton_optimizer(n_steps, data, labels,
         # decide whether to accept
         grad_hamiltonian = new_hamiltonian - hamiltonian
         if accept(grad_hamiltonian):
-            energy = new_energy
-
-        # store value
-        ws[i] = w_new
-        gs[i] = g_new
-        es[i] = new_energy
-
+            # store new values
+            ws[i] = w_new
+            gs[i] = g_new
+            es[i] = new_energy
+        else:
+            # use old values
+            n_rejected += 1
+            ws[i] = ws[i - 1]
+            gs[i] = gs[i - 1]
+            es[i] = es[i - 1]
+    print("Rejected percentage:", n_rejected / n_samples * 100)
     return ws, gs, es
