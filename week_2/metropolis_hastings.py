@@ -24,12 +24,17 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3, spread=0.1):
     """
 
     samples = np.zeros((n_points, n_dims))
-    x = np.ones(n_dims) * -1
+    x = np.ones(n_dims)
     a_vals = np.zeros(n_points)
 
+    print("Starting Metropolis Hastings sampling method for {} samples."
+          .format(n_points))
+    print("Spread sigma of proposal distribution:", spread)
+    print("===============")
+    print("|", end='')
     for i in range(n_points):
-        if i % (n_points / 4) == 0:
-            print(i)
+        if i / n_points * 100 % 5 == 0:
+            print("█", end='')
         new_x = x + np.random.normal(size=n_dims, scale=spread)
 
         counter = 0
@@ -42,6 +47,8 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3, spread=0.1):
             x = new_x
         else:
             samples[i] = x
+
+    print("|")
 
     return samples, a_vals
 
