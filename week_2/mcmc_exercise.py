@@ -2,6 +2,8 @@ import numpy as np
 import week_2.p_star_distribution as p_star
 from week_2.metropolis_hastings import metropolis_hastings
 import week_2.hamilton as hamilton
+import week_2.orientation as orientation
+
 from plottebakkers import plot_mcmc
 import functools
 import matplotlib.pyplot as plt
@@ -49,25 +51,31 @@ def test_longeving_parameters():
 
 
 def final_test():
-    n_samples = 8000
+    n_samples = 10000
+    resolution = 200
+
+    x_min, x_max = 1, 10
+    y_min, y_max = 1, 8
+    # For now the calculation only works if resolution is len(w). This should
+    #  not be the case, so some calculation changes might be made.
+    n_steps = complex(0, resolution)
+    grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
+
     mh_samples, a = metropolis_hastings(
         functools.partial(p_star.p_star_distribution, x, t), x, t,
         n_points=n_samples)
-
-    plot_mcmc.plotfig(mh_samples, x, t, a)
+    prob_grid_mh = orientation.orientation(mh_samples[1000:], grid)
 
     hamilton_samples = hamilton.sample(n_samples, x, t)
-    plot_mcmc.plotfig(hamilton_samples[0], x, t)
+    prob_grid_ham = orientation.orientation(hamilton_samples[0][1000:], grid)
+
+    plot_mcmc.plotfig(mh_samples, x, t, prob_grid_mh, grid, accept_values=a)
+    plot_mcmc.plotfig(hamilton_samples[0], x, t, prob_grid_ham, grid)
+
+    plot_mcmc.plot_prob_difference(grid, prob_grid_ham, prob_grid_mh)
 
 
 
 # %% plotting
-# samples, a = metropolis_hastings(
-#     functools.partial(p_star_distribution, x, t), x, t,
-#     n_points=8000)
-
-# hamilton_samples = hamilton.sample(4000, x, t)
 
 final_test()
-
-# plot_mcmc.pl

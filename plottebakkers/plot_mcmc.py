@@ -37,29 +37,19 @@ def plot_spread(axes, weights, travel=None,
     axes.set_ylabel(r'$w_1$')
 
 
-def plot_bayesian_solution(axes, weights, data, labels,
-                           resolution: int = 100):
-    samples = np.linspace(2, 9, len(weights))
+def plot_bayesian_solution(axes, data, labels, grid, probability):
     axes.set_title('Bayesian solution')
 
-    x_min, x_max = 1, 10
-    y_min, y_max = 1, 8
-    # For now the calculation only works if resolution is len(w). This should
-    #  not be the case, so some calculation changes might be made.
-    n_steps = complex(0, resolution)
-    grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
+    axes.pcolormesh(grid[0], grid[1], probability, cmap='RdBu')
 
-    probability = orientation(weights, grid)
-
-    axes.pcolormesh(grid[0], grid[1], probability)
-
+    axes.scatter(data[labels == 0][:, 1], data[labels == 0][:, 2],
+                 marker='v', linewidths=7, c='white')
+    axes.scatter(data[labels == 1][:, 1], data[labels == 1][:, 2],
+                 marker='o', linewidths=7, c='white')
     axes.scatter(data[labels == 0][:, 1], data[labels == 0][:, 2],
                  marker='v', linewidths=3, c='black')
     axes.scatter(data[labels == 1][:, 1], data[labels == 1][:, 2],
                  marker='o', linewidths=3, c='black')
-    # axes.plot(samples,
-    #           line(samples, weights[-10]),
-    #           c="black")
     axes.set_ylim(1.9, 7.1)
 
 
@@ -126,7 +116,21 @@ def plot_travel(samples, accept_values,
         fig.savefig(destination)
 
 
-def plotfig(samples, data, labels, accept_values=None,
+def plot_prob_difference(grid, prob_grid_1, prob_grid_2,
+                         show: bool = True, filename: str = ""):
+    plt.title("Difference in probability maps.")
+    diff = prob_grid_1 - prob_grid_2
+    plt.pcolormesh(grid[0], grid[1], diff, cmap='seismic')
+    plt.colorbar()
+    if show:
+        plt.show()
+    else:
+        if filename == "":
+            filename = "diff_mh_ham.png"
+        plt.savefig("{}{}".format(DATAFOLDER, filename))
+
+
+def plotfig(samples, data, labels, probability_grid, grid, accept_values=None,
             colormap_res: int = 100,
             show: bool = True, fname: str = ""):
     if accept_values is not None:
@@ -149,8 +153,7 @@ def plotfig(samples, data, labels, accept_values=None,
 
     plot_spread(ax[1, 0], weights, travel)
 
-    plot_bayesian_solution(ax[1, 1], weights, data, labels,
-                           resolution=colormap_res)
+    plot_bayesian_solution(ax[1, 1], data, labels, grid, probability_grid)
 
     if show:
         fig.show()
