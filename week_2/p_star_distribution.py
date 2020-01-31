@@ -19,6 +19,13 @@ def error_function(weights, data, labels):
 
 
 def logistic(data, weights):
+    """
+    sigmoid function which returns a value between 0 and 1 for each element
+    in data corresponding to the prediction that the weights make.
+    :param data: group of data points.
+    :param weights: weight vector predicting a seperation line.
+    :return: sigmoid value in array of len(data)
+    """
     return 1 / (1 + np.exp(- np.dot(weights, data.transpose())))
 
 
