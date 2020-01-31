@@ -47,7 +47,7 @@ class IsingEnsemble:
             state.normalisation_constant = self.normalisation_constant
 
     def _find_normalisation_constant(self):
-        print('Calculating exact normalisation constant in ising ensemble')
+#        print('Calculating exact normalisation constant in ising ensemble')
         # Find normalisation constant Z=sum(-E(s)), sum over all states s
         dummy = IsingModel(self.n_spins,
                            frustrated=self.frustrated,
