@@ -25,9 +25,11 @@ def orientation(weights, grid):
     many lines classify that xy-coordinate as + or - 1.
     """
     cnt = np.zeros(shape=(np.shape(grid[0])))
+    print("Creating probability grid with resolution {}x{}."
+          .format(len(grid[0]), len(grid[1])))
     print("|", end='')
     for i, w in enumerate(weights):
-        if i / len(weights) * 100 % 1 == 0:
+        if i / len(weights) * 100 % 5 == 0:
             print("█", end='')
         prod = w[0] + w[1] * grid[0] + w[2] * grid[1]
         prod[prod < 0] = 0
@@ -52,27 +54,26 @@ def plot_m_vs_iteration(axes, m_values):
     axes.plot(m_values)
 
 
-def plot_spread(axes, weights, travel=0):
-
+def plot_spread(axes, weights, travel=None):
     axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
     axes.plot(weights[:, 1], weights[:, 2], marker=',', c="black", linestyle='')
-    if travel != 0:
+    if travel is not None:
         axes.plot(travel[:, 1], travel[:, 2], c="red")
     axes.set_xlabel(r'$w_2$')
     axes.set_ylabel(r'$w_1$')
 
 
-def plot_bayesian_solution(axes, weights, data, labels):
+def plot_bayesian_solution(axes, weights, data, labels,
+                           resolution: int = 100):
     samples = np.linspace(2, 9, len(weights))
     axes.set_title('Bayesian solution')
 
-    xmin, xmax = 1, 10
-    ymin, ymax = 1, 8
+    x_min, x_max = 1, 10
+    y_min, y_max = 1, 8
     # For now the calculation only works if resolution is len(w). This should
     #  not be the case, so some calculation changes might be made.
-    resolution = 100
-    nsteps = complex(0, resolution)
-    grid = np.mgrid[xmin:xmax:nsteps, ymin:ymax:nsteps]
+    n_steps = complex(0, resolution)
+    grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
 
     probability = orientation(weights, grid)
 
@@ -151,9 +152,13 @@ def plot_travel(samples, accept_values,
         fig.savefig(destination)
 
 
-def plotfig(samples, accept_values, data, labels,
+def plotfig(samples, data, labels, accept_values=None,
+            colormap_res: int = 100,
             show: bool = True, fname: str = ""):
-    travel_length, dump = determine_travel(accept_values)
+    if accept_values is not None:
+        travel_length, dump = determine_travel(accept_values)
+    else:
+        travel_length = 0
 
     m_values = np.zeros(len(samples[travel_length:]))
     for i, s in enumerate(samples[travel_length:]):
@@ -170,7 +175,8 @@ def plotfig(samples, accept_values, data, labels,
 
     plot_spread(ax[1, 0], weights, travel)
 
-    plot_bayesian_solution(ax[1, 1], weights, data, labels)
+    plot_bayesian_solution(ax[1, 1], weights, data, labels,
+                           resolution=colormap_res)
 
     if show:
         fig.show()
