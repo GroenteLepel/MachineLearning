@@ -113,25 +113,28 @@ def plot_travel(samples, accept_values,
         if file_name == '':
             file_name = 'log_std_vs_travel.png'
         destination = '{}{}'.format(DATAFOLDER, file_name)
+        fig.tight_layout()
         fig.savefig(destination)
 
 
 def plot_prob_difference(grid, prob_grid_1, prob_grid_2,
                          show: bool = True, filename: str = ""):
-    plt.title("Difference in probability maps.")
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title("Difference in probability maps.")
     diff = prob_grid_1 - prob_grid_2
-    plt.pcolormesh(grid[0], grid[1], diff, cmap='seismic')
-    plt.colorbar()
+    mappable = ax.pcolormesh(grid[0], grid[1], diff, cmap='seismic')
+    fig.colorbar(mappable, ax=ax)
     if show:
-        plt.show()
+        fig.show()
     else:
         if filename == "":
             filename = "diff_mh_ham.png"
-        plt.savefig("{}{}".format(DATAFOLDER, filename))
+        fig.tight_layout()
+        fig.savefig("{}{}".format(DATAFOLDER, filename))
 
 
 def plotfig(samples, data, labels, probability_grid, grid, accept_values=None,
-            colormap_res: int = 100,
             show: bool = True, fname: str = ""):
     if accept_values is not None:
         travel_length, dump = determine_travel(accept_values)
@@ -145,7 +148,7 @@ def plotfig(samples, data, labels, probability_grid, grid, accept_values=None,
     travel = samples[:travel_length]
     weights = samples[travel_length:]
 
-    fig, ax = plt.subplots(2, 2, figsize=(10, 10))
+    fig, ax = plt.subplots(2, 2, figsize=(8, 8))
 
     plot_w_vs_iteration(ax[0, 0], weights)
 
@@ -160,4 +163,5 @@ def plotfig(samples, data, labels, probability_grid, grid, accept_values=None,
     else:
         if fname == "":
             fname = "mcmc_full.png"
+        fig.tight_layout()
         fig.savefig("{}{}".format(DATAFOLDER, fname))
