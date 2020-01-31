@@ -64,6 +64,8 @@ def sample(n_samples: int, data, labels,
     n_rejected = 0
 
     print("Starting Longevin sampling method for {} samples.".format(n_samples))
+    print("Parameters: epsilon = {}, alpha = {}, leap frog steps = {}"
+          .format(epsilon, alpha, leap_frog_steps))
     print("===============")
     print("|", end='')
     for i in range(1, n_samples):
@@ -101,5 +103,6 @@ def sample(n_samples: int, data, labels,
             print("█", end='')
 
     print("|")
-    print("Done. Rejected percentage:", n_rejected / n_samples * 100)
-    return ws, gs, es
+    reject_ratio = n_rejected / n_samples
+    print("Done. Rejected percentage:", reject_ratio)
+    return ws, gs, es, reject_ratio
