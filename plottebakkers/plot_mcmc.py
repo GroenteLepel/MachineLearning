@@ -54,8 +54,12 @@ def plot_m_vs_iteration(axes, m_values):
     axes.plot(m_values)
 
 
-def plot_spread(axes, weights, travel=None):
-    axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
+def plot_spread(axes, weights, travel=None,
+                title: str = ""):
+    if title == "":
+        axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
+    else:
+        axes.set_title(title)
     axes.plot(weights[:, 1], weights[:, 2], marker=',', c="black", linestyle='')
     if travel is not None:
         axes.plot(travel[:, 1], travel[:, 2], c="red")
