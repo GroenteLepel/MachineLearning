@@ -52,11 +52,12 @@ def plot_m_vs_iteration(axes, m_values):
     axes.plot(m_values)
 
 
-def plot_spread(axes, travel, weights):
+def plot_spread(axes, weights, travel=0):
 
     axes.set_title(r'$(w_1, w_2)$ sampled after burn-in')
     axes.plot(weights[:, 1], weights[:, 2], marker=',', c="black", linestyle='')
-    axes.plot(travel[:, 1], travel[:, 2], c="red")
+    if travel != 0:
+        axes.plot(travel[:, 1], travel[:, 2], c="red")
     axes.set_xlabel(r'$w_2$')
     axes.set_ylabel(r'$w_1$')
 
@@ -137,7 +138,7 @@ def plot_travel(samples, accept_values,
     x_post_travel = np.arange(travel_length, len(samples))
     ax[0].plot(x_pre_travel, history[:travel_length], c="red")
     ax[0].plot(x_post_travel, history[travel_length:], c="black")
-    plot_spread(ax[1], travel, weights)
+    plot_spread(ax[1], weights, travel)
 
     fig.tight_layout()
 
@@ -167,7 +168,7 @@ def plotfig(samples, accept_values, data, labels,
 
     plot_m_vs_iteration(ax[0, 1], m_values)
 
-    plot_spread(ax[1, 0], travel, weights)
+    plot_spread(ax[1, 0], weights, travel)
 
     plot_bayesian_solution(ax[1, 1], weights, data, labels)
 
