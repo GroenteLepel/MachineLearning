@@ -61,9 +61,7 @@ def final_test():
     n_steps = complex(0, resolution)
     grid = np.mgrid[x_min:x_max:n_steps, y_min:y_max:n_steps]
 
-    mh_samples, a = metropolis_hastings(
-        functools.partial(p_star.p_star_distribution, x, t), x, t,
-        n_points=n_samples)
+    mh_samples, a = metropolis_hastings(x, t, n_points=n_samples)
     prob_grid_mh = orientation.orientation(mh_samples[1000:], grid)
 
     hamilton_samples = hamilton.sample(n_samples, x, t)

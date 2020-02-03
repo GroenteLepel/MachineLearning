@@ -1,21 +1,12 @@
 import numpy as np
-from week_2.p_star_distribution import objective_function
+import week_2.p_star_distribution as p_star
 
 
-def normal(x, mean=0):
-    """
-    :return: float, probability that x is in a 3D-gaussian with identity matrix
-    as covariance.
-    """
-
-    return np.exp(-1 * np.dot((x - mean), (x - mean)) / 2) / \
-           (np.sqrt(2 * np.pi) ** 3)
-
-
-def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3, spread=0.1):
+def metropolis_hastings(data, labels, n_points=1000, n_dims=3, spread=0.1):
     """
     Method for sampling data from a distribution p.
-    :param p: distribution to sample using this method.
+    :param data: data points used to train the data on.
+    :param labels: labels corresponding to the data points above.
     :param n_points: amount of points you want to sample from distribution p.
     :param n_dims: amount of dimensions of the points which are sampled.
     :param spread: determines the spread of the gaussian from which to draw
@@ -37,10 +28,9 @@ def metropolis_hastings(p, data, labels, n_points=1000, n_dims=3, spread=0.1):
             print("█", end='')
         new_x = x + np.random.normal(size=n_dims, scale=spread)
 
-        counter = 0
         a_vals[i] = accept_probability(
-            current=objective_function(x, data, labels, 0.01),
-            candidate=objective_function(new_x, data, labels, 0.01)
+            current=p_star.objective_function(x, data, labels, 0.01),
+            candidate=p_star.objective_function(new_x, data, labels, 0.01)
         )
         if accept_val(a_vals[i]):
             samples[i] = new_x
