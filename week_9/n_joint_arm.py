@@ -28,15 +28,21 @@ def get_functions(arm, time_window, time, target, alpha, p):
     return a
 
 
-max_time = 2
-time_step = 0.1
-times = np.arange(max_time, step=time_step)
-my_arm = Arm(3, 0.1)
-for t in times:
-    to_solve = partial(get_functions, my_arm, 2, t, [0, 0], 2)
-    start = np.ones(2 * my_arm.n_joints)
-    solution = fsolve(to_solve, start)
-    action = 1 / (max_time - t) * (
-                solution[:my_arm.n_joints] - my_arm.joint_angle)
-    my_arm.joint_angle = action * time_step + np.sqrt(
-        my_arm.noise * time_step) * np.random.normal(size=my_arm.n_joints)
+def calculate_step():
+    max_time = 2
+    time_step = 0.1
+    times = np.arange(max_time, step=time_step)
+    my_arm = Arm(3, 0.1)
+    for t in times:
+        to_solve = partial(get_functions, my_arm, 2, t, [0, 0], 2)
+        start = np.ones(2 * my_arm.n_joints)
+        solution = fsolve(to_solve, start)
+        action = 1 / (max_time - t) * (
+                    solution[:my_arm.n_joints] - my_arm.joint_angle)
+        my_arm.joint_angle = action * time_step + np.sqrt(
+            my_arm.noise * time_step) * np.random.normal(size=my_arm.n_joints)
+
+
+my_arm = Arm(3, 0.1, angles=[np.pi, 0.5 * np.pi, np.pi])
+# my_arm = Arm(3, 0.1, angles=[0, 0, 0])
+my_arm.show()

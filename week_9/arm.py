@@ -1,14 +1,17 @@
 import numpy as np
 from functools import partial
 from scipy.optimize import fsolve
-
 from week_9.joint import Joint
+import matplotlib.pyplot as plt
 
 
 class Arm:
-    def __init__(self, n_joints: int, noise: float):
+    def __init__(self, n_joints: int, noise: float, angles=None):
         self.n_joints = n_joints
-        self.joint_angle = np.zeros(n_joints)
+        if angles is None:
+            self.joint_angle = np.zeros(n_joints)
+        else:
+            self.joint_angle = angles
         self.noise = noise
 
     def _gen_initial_joints(self):
@@ -37,3 +40,22 @@ class Arm:
 
     def expected_angle(self, alpha, time_window):
         pass
+
+    def show(self):
+        fig = plt.figure(figsize=(4, 4))
+        ax = fig.add_subplot(1, 1, 1)
+        x_individual = np.cos(self.joint_angle)
+        y_individual = np.sin(self.joint_angle)
+        x_joints, y_joints = np.zeros(self.n_joints), np.zeros(self.n_joints)
+        for i in range(1, self.n_joints):
+            x_joints[i] = x_individual[:i].sum()
+            y_joints[i] = y_individual[:i].sum()
+
+        ax.grid(ls='--')
+        axes_range = - self.n_joints + 1, self.n_joints - 1
+        ax.set_xticks(np.arange(axes_range[0], axes_range[1]))
+        ax.set_yticks(np.arange(axes_range[0], axes_range[1]))
+        ax.set_xlim(axes_range)
+        ax.set_ylim(axes_range)
+        ax.plot(x_joints, y_joints, marker='o')
+        fig.show()
