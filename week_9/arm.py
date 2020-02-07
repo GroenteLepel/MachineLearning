@@ -42,12 +42,13 @@ class Arm:
         pass
 
     def show(self):
+        plt.clf()
         fig = plt.figure(figsize=(4, 4))
         ax = fig.add_subplot(1, 1, 1)
         x_individual = np.cos(self.joint_angle)
         y_individual = np.sin(self.joint_angle)
-        x_joints, y_joints = np.zeros(self.n_joints), np.zeros(self.n_joints)
-        for i in range(1, self.n_joints):
+        x_joints, y_joints = np.zeros(self.n_joints + 1), np.zeros(self.n_joints + 1)
+        for i in range(1, self.n_joints + 1):
             x_joints[i] = x_individual[:i].sum()
             y_joints[i] = y_individual[:i].sum()
 
