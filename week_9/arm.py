@@ -6,29 +6,28 @@ import matplotlib.pyplot as plt
 
 
 class Arm:
-    def __init__(self, n_joints: int, noise: float, angles=None):
+    def __init__(self, n_joints: int, noise_parameter: float, angles=None):
         self.n_joints = n_joints
         if angles is None:
             self.joint_angle = np.zeros(n_joints)
         else:
             self.joint_angle = angles
-        self.noise = noise
+        self.noise_parameter = noise_parameter
 
     def _gen_initial_joints(self):
         return [Joint(0) for _ in self.n_joints]
 
     def move_to(self, target, time_window):
-        time_step = 1
-        steps = np.arange(time_window, time_step)
-        for t in steps:
-            diff_angle = self._calc_diff_angle(time_window, time_step, t)
-            self.joint_angle += diff_angle
+        pass
 
-    def _calc_diff_angle(self, time_window, time_step, time):
-        action = self._calc_action(time_window, time)
+    def _calc_diff_angle(self, action, time_step_size):
+        xi = self.noise_parameter * time_step_size
+        noise = np.random.normal(size=self.n_joints,
+                                 scale=np.sqrt(xi))
+        return action * time_step_size + noise
 
-        noise = np.sqrt(self.noise * time_step) * np.random.normal()
-        return action * time_step + noise
+    def increment_angles(self, action, time_step_size):
+        self.joint_angle += self._calc_diff_angle(action, time_step_size)
 
     def _calc_action(self, time_window, time):
         expected_angle = self._calc_expected_angle()
@@ -53,7 +52,7 @@ class Arm:
             y_joints[i] = y_individual[:i].sum()
 
         ax.grid(ls='--')
-        axes_range = - self.n_joints + 1, self.n_joints - 1
+        axes_range = - self.n_joints - 1, self.n_joints + 1
         ax.set_xticks(np.arange(axes_range[0], axes_range[1]))
         ax.set_yticks(np.arange(axes_range[0], axes_range[1]))
         ax.set_xlim(axes_range)
