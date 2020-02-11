@@ -1,7 +1,8 @@
 import numpy as np
 from functools import partial
 from scipy.optimize import fsolve
-from week_9.joint import Joint
+#from week_9.joint import Joint
+#from joint.py import Joint
 import matplotlib.pyplot as plt
 
 
