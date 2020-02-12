@@ -42,12 +42,11 @@ def n_salamander_states_to_ie(filepath: str, n_salamander_states: int):
 
 
 def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100):
-#    if method == 'exact':
-    return iterations < iterations_bound
-    return diff_llh > 1e-2
-#    else:
-#        return iterations < iterations_bound
-#        return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
+    if method == 'exact':
+        return diff_llh > 1e-2
+    else:
+        return iterations < iterations_bound
+        return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
 
 
 def print_output(method: str, iteration: int, current_llh: float, total_spins: int, i: int, j: int = -1):
