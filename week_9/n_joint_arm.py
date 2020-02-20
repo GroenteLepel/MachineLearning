@@ -56,7 +56,7 @@ def get_functions2(arm, time_window, time, target, alpha):
                         (y - y_target)
                 ))) 
             a[arm.n_joints + i] = \
-                 0 + ( \
+                 np.abs(np.sqrt(1 / ( \
                 1. / nu * (
                         1. / (time_window - time) +
                         alpha * np.exp(- sigma[i] ** 2) -
@@ -64,7 +64,7 @@ def get_functions2(arm, time_window, time, target, alpha):
                         np.cos(mu[i]) * np.exp(- sigma[i] ** 2 / 2) -
                         alpha * (y - y_target) *
                         np.sin(mu[i]) * np.exp(- sigma[i] ** 2 / 2)
-                ))
+                ))))
         return a
     return f
 
@@ -80,21 +80,20 @@ def control(max_time: float, current_time: float,
 
 def calculate_step():
     max_time = 1
-    n_steps = 10
+    n_steps = 100
     n_plots = 10
+    njoints = 3
     time_step = max_time / n_steps
     times = np.arange(max_time, step=time_step)
-    my_arm = Arm(3, 0.01, angles=[-1, 0.02, 0.01])
+    my_arm = Arm(njoints, 1, angles=np.zeros(njoints))
     start = np.random.normal(size = my_arm.n_joints * 2)
     for t in times:
         function = get_functions2(my_arm, max_time, t, [0.0, 0.0], 0.1)
         error = 1
-        start = np.random.normal(size = my_arm.n_joints * 2)
         while error > 0.01: 
                      x = function(start)
                      error = np.linalg.norm(start - x)
-                    # print(error)
-                     print(x)
+                     print(error)
                      start = x
                      
         action = control(max_time, t,
