@@ -67,7 +67,3 @@ class Arm:
             ax.plot(x_joints, y_joints, marker='o', ls='--')
         else:
             ax.plot(x_joints, y_joints, marker='o')
-
-    def show(self):
-        plt.show()
-        plt.pause(0.1)
