@@ -1,8 +1,6 @@
 import numpy as np
 from functools import partial
 from scipy.optimize import fsolve
-# from week_9.joint import Joint
-# from joint.py import Joint
 import matplotlib.pyplot as plt
 
 
@@ -14,9 +12,6 @@ class Arm:
         else:
             self.joint_angle = angles
         self.noise_parameter = noise_parameter
-
-    # def _gen_initial_joints(self):
-    #     return [Joint(0) for _ in self.n_joints]
 
     def move_to(self, target, time_window):
         pass
@@ -30,20 +25,10 @@ class Arm:
     def increment_angles(self, action, time_step_size):
         self.joint_angle += self._calc_diff_angle(action, time_step_size)
 
-    def _calc_action(self, time_window, time):
-        expected_angle = self._calc_expected_angle()
-
-        return 1 / (time_window - time) * (expected_angle - self.joint_angle)
-
-    def _calc_expected_angle(self):
-        pass
-
-    def expected_angle(self, alpha, time_window):
-        pass
-
     def draw(self, dashed: bool = False):
         if not plt.get_fignums():
-            fig = plt.figure(figsize=(4, 4))
+            size = 5
+            fig = plt.figure(figsize=(size, size))
             ax = fig.add_subplot(1, 1, 1)
         else:
             fig = plt.gcf()
