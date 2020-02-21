@@ -20,7 +20,7 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
     for i in range(arm.n_joints):
         # mu equations
         eqns[i] = \
-            arm.joint_angle[i] + \
+            mu[i] + \
             alpha * (time_window - time) * (
                     np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) *
                     (x_expected - x_target) -
