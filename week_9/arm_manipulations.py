@@ -28,7 +28,7 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
                     (y_expected - y_target)
             )
         # sigma equations
-        eqns[arm.n_joints + i] = \
+        eqns[arm.n_joints + i] = 1 / np.sqrt(
                 1 / arm.noise_parameter * (
                         1 / (time_window - time) +
                         alpha * np.exp(- sigma[i] ** 2) -
@@ -36,7 +36,7 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
                         np.cos(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) -
                         alpha * (y_expected - y_target) *
                         np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2)
-                )
+                ))
     return eqns
 
 
@@ -83,7 +83,8 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
         to_solve = partial(get_functions, arm, max_time, t, move_to)
         solution = solve(to_solve, init)
         expected_angles = solution[:arm.n_joints]
-        sigma = np.sqrt(1 / solution[arm.n_joints:])
+        sigma = solution[arm.n_joints:]
+        # sigma = np.sqrt(1 / solution[arm.n_joints:])
         action = control(max_time, t, expected_angles, arm.joint_angle)
         arm.increment_angles(action, time_step)
 
