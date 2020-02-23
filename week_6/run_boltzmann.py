@@ -106,14 +106,14 @@ observed_rates = get_observed_rates('../data/salamander_retina.txt')
 coupling_matrix_MC_retina = pickle.load(open('coupling_matrix_MC_100it.p', 'rb'))
 threshold_vector_MC_retina = pickle.load(open('coupling_vector_MC_100it.p', 'rb'))
 
-#filepath_expectations = '../data/salamander_retina_expectations.txt'
-#filepath_retina = '../data/salamander_retina.txt'
-#expectation_matrix_c_salamander, expectation_vector_c_salamander = boltzmann.read_salamander_expectations(filepath_expectations, 160)
-#coupling_matrix_MF, threshold_vector_MF = boltzmann.mean_field_estimate(expectation_matrix_c_salamander, expectation_vector_c_salamander)
-#coupling_matrix_MF -= np.identity(160) * coupling_matrix_MF
+filepath_expectations = '../data/salamander_retina_expectations.txt'
+filepath_retina = '../data/salamander_retina.txt'
+expectation_matrix_c_salamander, expectation_vector_c_salamander = boltzmann.read_salamander_expectations(filepath_expectations, 160)
+coupling_matrix_MF, threshold_vector_MF = boltzmann.mean_field_estimate(expectation_matrix_c_salamander, expectation_vector_c_salamander)
+coupling_matrix_MF -= np.identity(160) * coupling_matrix_MF
 
-coupling_submatrix = coupling_matrix_MC_retina[0:10,0:10]
-threshold_subvector = threshold_vector_MC_retina[0:10]
+coupling_submatrix = coupling_matrix_MF[0:10,0:10]
+threshold_subvector = threshold_vector_MF[0:10]
 
 im_10_retina = IsingModel(10,frustrated=True,threshold=True)
 im_10_retina.threshold_vector = copy.deepcopy(threshold_subvector)
