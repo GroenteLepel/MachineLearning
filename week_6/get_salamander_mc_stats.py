@@ -14,7 +14,6 @@ import sys
 import pickle
 import numpy as np
 
-from get_observed_rates import get_observed_rates
 from ising_ensemble import IsingEnsemble
 sys.path.append("../week_3")
 from ising_model import IsingModel
