@@ -15,9 +15,10 @@ class IsingModel:
 
         self.frustrated = frustrated
         self.threshold = threshold
-
+        
         self.coupling_matrix = self._generate_matrix()
         self.threshold_vector = self._generate_thresholds()
+            
         self.state = self._generate_spin_state()
 
         self.normalisation_constant = 0
@@ -76,6 +77,9 @@ class IsingModel:
         dummy = IsingModel(self.n,
                            frustrated=self.frustrated,
                            threshold=self.threshold)
+    
+        dummy.coupling_matrix = self.coupling_matrix
+        dummy.threshold_vector = self.threshold_vector
 
         normalisation_constant = 0
         for state in states:
