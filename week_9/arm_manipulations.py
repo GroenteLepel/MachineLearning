@@ -4,7 +4,7 @@ from functools import partial
 from week_9.arm import Arm
 import matplotlib.pyplot as plt
 import copy
-
+import progress_bar.progress_bar as pb
 
 def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
     # separating the x and y from target, and mu and sigma from init
@@ -20,7 +20,7 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
     for i in range(arm.n_joints):
         # mu equations
         eqns[i] = \
-            arm.joint_angle[i] + \
+            mu[i] + \
             alpha * (time_window - time) * (
                     np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) *
                     (x_expected - x_target) -
@@ -36,8 +36,7 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
                         np.cos(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) -
                         alpha * (y_expected - y_target) *
                         np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2)
-                )
-            )
+                ))
     return eqns
 
 
@@ -76,12 +75,16 @@ def control(max_time: float, current_time: float,
 def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
     time_step = max_time / n_steps
     times = np.arange(max_time, step=time_step)
-    init = np.random.normal(size=arm.n_joints * 2, scale=10)
+    init = np.random.normal(size=arm.n_joints * 2)
     for t in times:
+        percentage = t / max_time * 100
+        bar = pb.percentage_to_bar(percentage)
+        print(bar, end='\r')
         to_solve = partial(get_functions, arm, max_time, t, move_to)
         solution = solve(to_solve, init)
         expected_angles = solution[:arm.n_joints]
         sigma = solution[arm.n_joints:]
+        # sigma = np.sqrt(1 / solution[arm.n_joints:])
         action = control(max_time, t, expected_angles, arm.joint_angle)
         arm.increment_angles(action, time_step)
 
@@ -89,7 +92,9 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
         expected_arm.joint_angle = expected_angles
         expected_arm.draw(dashed=True)
         arm.draw()
-        plt.show()
+        plt.title("t = {0:.2f}".format(t))
+        plt.savefig("../data/arm_move/t{0:.2f}.png".format(t))
+        plt.clf()
 
         init = np.concatenate((arm.joint_angle, sigma))
 
