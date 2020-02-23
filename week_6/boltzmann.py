@@ -41,12 +41,12 @@ def n_salamander_states_to_ie(filepath: str, n_salamander_states: int):
     return ie
 
 
-def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100):
+def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100, llh: float = 10**42):
     if method == 'exact':
         return diff_llh > 1e-2
     else:
-        return iterations < iterations_bound
-        return (not (dw_avg < 1e-1 and dtheta_avg < 1e-2)) and iterations < iterations_bound
+        #return iterations < iterations_bound
+        return llh < - 3.5
 
 
 def print_output(method: str, iteration: int, current_llh: float, total_spins: int, i: int, j: int = -1):
@@ -86,8 +86,13 @@ def boltzmann_optimiser(ie: IsingEnsemble,
     return likelihood
 
 
-def optimise(ie: IsingEnsemble, eta: float,
-             method: str, output: bool, burn_in_iterations: int = -1, n_MC_state_samples: int = 500, iterations_bound: int = 100):
+def optimise(ie: IsingEnsemble, \
+             eta: float,\
+             method: str, \
+             output: bool, \
+             burn_in_iterations: int = -1, \
+             n_MC_state_samples: int = 500, \
+             iterations_bound: int = 100):
     # Initialise criterion value
     likelihood = np.zeros(int(1e5))
     cnt = 0
@@ -97,7 +102,7 @@ def optimise(ie: IsingEnsemble, eta: float,
     dtheta_avg = 1e10
     last_sample = []
 
-    while constraint(method, diff_llh, dw_avg = dw_avg, dtheta_avg = dtheta_avg, iterations = cnt, iterations_bound = iterations_bound):
+    while constraint(method, diff_llh, dw_avg = dw_avg, dtheta_avg = dtheta_avg, iterations = cnt, iterations_bound = iterations_bound, llh = likelihood[cnt-1]):
         old_w = copy.copy(ie.coupling_matrix)
         old_t = copy.copy(ie.threshold_vector)
 

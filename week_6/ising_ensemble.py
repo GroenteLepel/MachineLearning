@@ -10,7 +10,8 @@ import all_states as all_states
 
 class IsingEnsemble:
 
-    def __init__(self, n_models, n_spins, frustrated=True):
+    def __init__(self, n_models, n_spins, frustrated=True, \
+                 coupling_matrix = None, threshold_vector = None):
 
         self.n_models = n_models
         self.n_spins = n_spins
@@ -18,6 +19,7 @@ class IsingEnsemble:
 
         self.state_set = [IsingModel(n_spins, frustrated, threshold=True) for _
                           in range(n_models)]
+        
         self.coupling_matrix = copy.deepcopy(self.state_set[0].coupling_matrix)
         self.threshold_vector = copy.deepcopy(self.state_set[0].threshold_vector)
 
