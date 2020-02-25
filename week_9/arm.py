@@ -6,7 +6,7 @@ class Arm:
     def __init__(self, n_joints: int, noise_parameter: float, angles=None):
         self.n_joints = n_joints
         if angles is None:
-            self.joint_angle = np.zeros(n_joints)
+            self.joint_angle = np.random.normal(size=n_joints)
         else:
             self.joint_angle = angles
         self.noise_parameter = noise_parameter
