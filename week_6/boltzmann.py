@@ -45,8 +45,8 @@ def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, i
     if method == 'exact':
         return diff_llh > 1e-2
     else:
-        #return iterations < iterations_bound
-        return llh < - 3.5
+        return iterations < iterations_bound
+        #return llh < - 3.5
 
 
 def print_output(method: str, iteration: int, current_llh: float, total_spins: int, i: int, j: int = -1):
