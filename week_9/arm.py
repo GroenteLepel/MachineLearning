@@ -1,6 +1,4 @@
 import numpy as np
-from functools import partial
-from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
 
 
@@ -8,24 +6,37 @@ class Arm:
     def __init__(self, n_joints: int, noise_parameter: float, angles=None):
         self.n_joints = n_joints
         if angles is None:
-            self.joint_angle = np.zeros(n_joints)
+            self.joint_angle = np.random.normal(size=n_joints)
         else:
             self.joint_angle = angles
         self.noise_parameter = noise_parameter
 
-    def move_to(self, target, time_window):
-        pass
-
     def _calc_diff_angle(self, action, time_step_size):
+        """
+        Calculates the dtheta as from equation 2 in the report.
+        :param action: action calculated using equation 3 in report.
+        :param time_step_size: float, dt value.
+        :return: ndarray, dtype=float.
+        """
         xi = self.noise_parameter * time_step_size
         noise = np.random.normal(size=self.n_joints,
                                  scale=np.sqrt(xi))
         return action * time_step_size + noise
 
     def increment_angles(self, action, time_step_size):
+        """
+        Increment the angles of the joints.
+        :param action: action calculated using equation 3 in report.
+        :param time_step_size: float, dt value.
+        """
         self.joint_angle += self._calc_diff_angle(action, time_step_size)
 
     def draw(self, dashed: bool = False):
+        """
+        Draws the arm into a figure. If a figure is already active, it takes
+        that one.
+        :param dashed: boolean, option to make the arm dashed.
+        """
         if not plt.get_fignums():
             size = 5
             fig = plt.figure(figsize=(size, size))
