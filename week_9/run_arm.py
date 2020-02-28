@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 my_arm = Arm(3, 0.01)
 
 # move arm to desired coordinate using the move_arm() method
-am.move_arm(my_arm, [-1, -1], 1, 100)
+am.move_arm(my_arm, [0, 0], 1, 30)
 
 # feedback
 print(my_arm.joint_angle)
