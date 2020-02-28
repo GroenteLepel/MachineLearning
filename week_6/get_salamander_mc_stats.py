@@ -24,11 +24,11 @@ import boltzmann
 #%% Declaring constants
 n_spins = 160
 n_models = 283041
-n_MC_state_samples = 500
+n_MC_state_samples = 2000
 n_salamander_data = 500
-max_iterations = 500
+max_iterations = 50
 eta_start = 0.1
-burn_in_iterations = -1
+burn_in_iterations = 500
 output = True
 filepath_expectations = '../data/salamander_retina_expectations.txt'
 filepath_retina = '../data/salamander_retina.txt'
@@ -50,8 +50,8 @@ def get_salamander_mc_stats(n_salamander_data, max_iterations, output):
                            output=output, 
                            iterations_bound = max_iterations)
     
-    pickle.dump(coupling_matrix_MC, open('coupling_matrix_MC_{0}it_{1}SD.p'.format(max_iterations,n_salamander_data),'wb'))
-    pickle.dump(threshold_vector_MC, open('threshold_vector_MC_{0}it_{1}SD.p'.format(max_iterations, n_salamander_data),'wb'))
+    pickle.dump(coupling_matrix_MC, open('coupling_matrix_MC_{0}it_{1}SD_{2}MC.p'.format(max_iterations,n_salamander_data,n_MC_state_samples),'wb'))
+    pickle.dump(threshold_vector_MC, open('threshold_vector_MC_{0}it_{1}SD_{2}MC.p'.format(max_iterations, n_salamander_data,n_MC_state_samples),'wb'))
     
 
 
