@@ -21,38 +21,37 @@ def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
     """
     # separating the x and y from target, and mu and sigma from init
     x_target, y_target = target
-    mu, sigma = initial_state[:arm.n_joints], initial_state[arm.n_joints:]
+    mu, sigma2 = initial_state[:arm.n_joints], initial_state[arm.n_joints:]
 
     # intialisation of array containing the equations
     eqns = np.zeros(2 * arm.n_joints)
 
     # calculating expected x and y for all joints
-    x_expected = np.sum(np.cos(mu) * np.exp(- (sigma ** 2) / 2))
-    y_expected = np.sum(np.sin(mu) * np.exp(- (sigma ** 2) / 2))
+    x_expected = np.sum(np.cos(mu) * np.exp(- (sigma2) / 2))
+    y_expected = np.sum(np.sin(mu) * np.exp(- (sigma2) / 2))
     for i in range(arm.n_joints):
         # mu equations
         eqns[i] = \
-            mu[i] + \
+            (mu[i] + \
             alpha * (time_window - time) * (
-                    np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) *
+                    np.sin(mu[i]) * np.exp(- (sigma2[i]) / 2) *
                     (x_expected - x_target) -
-                    np.cos(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) *
+                    np.cos(mu[i]) * np.exp(- (sigma2[i]) / 2) *
                     (y_expected - y_target)
-            )
+            ))
         # sigma equations
-        eqns[arm.n_joints + i] = 1 / np.sqrt(
-                1 / arm.noise_parameter * (
+        eqns[arm.n_joints + i] =  1 / ( 1 / arm.noise_parameter * (
                         1 / (time_window - time) +
-                        alpha * np.exp(- sigma[i] ** 2) -
+                        alpha * np.exp(- sigma2[i]) -
                         alpha * (x_expected - x_target) *
-                        np.cos(mu[i]) * np.exp(- (sigma[i] ** 2) / 2) -
+                        np.cos(mu[i]) * np.exp(- (sigma2[i]) / 2) -
                         alpha * (y_expected - y_target) *
-                        np.sin(mu[i]) * np.exp(- (sigma[i] ** 2) / 2)
+                        np.sin(mu[i]) * np.exp(- (sigma2[i]) / 2)
                 ))
     return eqns
 
 
-def solve(function, x_init, error_range: float = 0.01):
+def solve(function, x_init, arm, error_range: float = 0.001):
     """
     Solves the given function using fixed point iteration.
     :param function: function to solve, should only take x_init as parameter.
@@ -63,9 +62,11 @@ def solve(function, x_init, error_range: float = 0.01):
     """
     error = 1
     x_old = x_init
+    eta = 0.01 / arm.n_joints
+    x_new = np.zeros(2 * arm.n_joints)
     while error > error_range:
-        x_new = function(x_old)
-        error = np.abs(x_new - x_old).sum()
+        x_new = x_old * (1 - eta) + eta * function(x_old)
+        error = np.abs(x_new - function(x_new)).sum()
         x_old = x_new
     return x_new
 
@@ -110,11 +111,10 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
         # creating the equations to solve
         to_solve = partial(get_functions, arm, max_time, t, move_to)
         # solve the equations using fixed point iteration
-        solution = solve(to_solve, init)
-
+        solution = solve(to_solve, init, arm)
         # derive the individual solutions
         expected_angles = solution[:arm.n_joints]
-        sigma = solution[arm.n_joints:]
+        sigma2 = solution[arm.n_joints:]
         # sigma = np.sqrt(1 / solution[arm.n_joints:])
 
         # calculate action and increment the angles in the arm
@@ -135,5 +135,5 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
 
         # change the init to the current values for kickstarting the fixed
         #  point iteration
-        init = np.concatenate((arm.joint_angle, sigma))
+        init = np.concatenate((arm.joint_angle, sigma2))
 
