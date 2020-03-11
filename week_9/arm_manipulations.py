@@ -4,6 +4,7 @@ from week_9.arm import Arm
 import matplotlib.pyplot as plt
 import copy
 import progress_bar.progress_bar as pb
+import os
 
 def get_functions(arm, time_window, time, target, initial_state, alpha=0.1):
     """
@@ -138,6 +139,10 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
         # plot
         plt.title("t = {0:.2f}".format(t))
         filename = "t{0:.2f}".format(t).replace('.', '')
+
+        if not os.path.exist('../data/arm_move'):
+            os.mkdir('../data/arm_move')
+
         plt.savefig("../data/arm_move/{}".format(filename))
         plt.clf()
 
