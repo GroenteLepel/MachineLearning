@@ -23,6 +23,9 @@ from ising_ensemble import IsingEnsemble
 
 # %% Defining functions
 def n_salamander_states_to_ie(filepath: str, n_salamander_states: int):
+    '''
+    This function returns an IsingEnsemble containing the first n_salamander_states of the salamander data.
+    '''
     state_set = np.zeros(shape=(n_salamander_states, 160))
     ie = IsingEnsemble(n_salamander_states, 160, frustrated = True)
     
@@ -42,14 +45,17 @@ def n_salamander_states_to_ie(filepath: str, n_salamander_states: int):
 
 
 def constraint(method: str, diff_llh = 1e10, dw_avg = 1e10, dtheta_avg = 1e10, iterations = -1, iterations_bound: int = 100, llh: float = 10**42):
+    '''
+    The constraint for when to stop the optimisation process.
+    '''
     if method == 'exact':
         return diff_llh > 1e-2
     else:
         return iterations < iterations_bound
-        #return llh < - 3.5
 
 
 def print_output(method: str, iteration: int, current_llh: float, total_spins: int, i: int, j: int = -1):
+    '''This function can print the current state while optimising.'''
     os.system('clear')
     if iteration == 0:
         current_llh = 'not yet calculated.'
@@ -86,13 +92,29 @@ def boltzmann_optimiser(ie: IsingEnsemble,
     return likelihood
 
 
-def optimise(ie: IsingEnsemble, \
-             eta: float,\
-             method: str, \
-             output: bool, \
-             burn_in_iterations: int = -1, \
-             n_MC_state_samples: int = 500, \
+def optimise(ie: IsingEnsemble,
+             eta: float,
+             method: str,
+             output: bool,
+             burn_in_iterations: int = -1,
+             n_MC_state_samples: int = 500,
              iterations_bound: int = 100):
+    '''
+    The actual optimiser.
+
+    Arguments:
+        - ie: containing the training patterns and the starting values for the correlation matrix and
+                         threshold vector;
+        - eta: learning rate;
+        - method: 'exact' or 'mc';
+        - output: boolean, True if output should be given while optimising;
+        - burn_in_iterations: how many iterations should be neglected for the monte carlo sampling;
+        - n_MC_state_samples: how many state samples should be generated after the burn_in iterations;
+        - iterations_bound: integer gives a bound on the amount of iterations for monte carlo method.
+
+    Returns:
+        Optimised coupling matrix, optimised threshold vector, final log-likelihood and amount of iterations needed.
+    '''
     # Initialise criterion value
     likelihood = np.zeros(int(1e5))
     cnt = 0
@@ -102,7 +124,12 @@ def optimise(ie: IsingEnsemble, \
     dtheta_avg = 1e10
     last_sample = []
 
-    while constraint(method, diff_llh, dw_avg = dw_avg, dtheta_avg = dtheta_avg, iterations = cnt, iterations_bound = iterations_bound, llh = likelihood[cnt-1]):
+    while constraint(method, diff_llh,
+                     dw_avg = dw_avg,
+                     dtheta_avg = dtheta_avg,
+                     iterations = cnt,
+                     iterations_bound = iterations_bound,
+                     llh = likelihood[cnt-1]):
         old_w = copy.copy(ie.coupling_matrix)
         old_t = copy.copy(ie.threshold_vector)
 
@@ -112,18 +139,21 @@ def optimise(ie: IsingEnsemble, \
             for j in range(i + 1, ie.n_spins):
                 if method == 'exact':
                     ie.update_normalisation_constants()
-                    
-                double_expec, last_sample = give_expectation(method, ie, i, j, burn_in_iterations = burn_in_iterations, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
 
-                llh_grad_w = ie.expectation_matrix_c[i][j] - double_expec
+                if ie.coupling_matrix.any():
+                    double_expec, last_sample = \
+                        give_expectation(method, ie, i, j, burn_in_iterations = burn_in_iterations, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
 
-                ie.coupling_matrix[i][j] += eta * llh_grad_w
-                ie.coupling_matrix[j][i] += eta * llh_grad_w
+                    llh_grad_w = ie.expectation_matrix_c[i][j] - double_expec
+
+                    ie.coupling_matrix[i][j] += eta * llh_grad_w
+                    ie.coupling_matrix[j][i] += eta * llh_grad_w
                 
             if method == 'exact':
                 ie.update_normalisation_constants()
                 
-            single_expec, last_sample = give_expectation(method, ie, i, burn_in_iterations = burn_in_iterations, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
+            single_expec, last_sample = \
+                give_expectation(method, ie, i, burn_in_iterations = burn_in_iterations, n_MC_state_samples = n_MC_state_samples, last_sample = last_sample)
             
             llh_grad_t = ie.expectation_vector_c[i] - single_expec
 
@@ -246,7 +276,7 @@ def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, burn_i
                                   ie.threshold_vector,
                                   ie.normalisation_constant, i, j)
     elif method == 'mc':
-        expec, last_sample = get_that_motherfucking_mc_exp_value(ie, i, j, burn_in_iterations, n_MC_state_samples)
+        expec, last_sample = get_mc_exp_value(ie, i, j, burn_in_iterations, n_MC_state_samples)
     else:
         raise ValueError(
             "No proper method given. Choose 'exact' or 'mc'.")
@@ -257,10 +287,10 @@ def give_expectation(method: str, ie: IsingEnsemble, i: int, j: int = -1, burn_i
 #def monte_carlo_optimise(ie: IsingEnsemble, eta: float, output: bool):
 #    likelihood = np.zeros(int(1e5))
 #
-#    expectation_value = get_that_motherfucking_mc_exp_value(ie)
+#    expectation_value = get_mc_exp_value(ie)
     
 
-def get_that_motherfucking_mc_exp_value_v2(ie: IsingEnsemble,
+def get_mc_exp_value_v2(ie: IsingEnsemble,
                                         i_index: int, j_index: int = -1,
                                         n_MC_state_samples: int = 500):
     '''
@@ -282,7 +312,7 @@ def get_that_motherfucking_mc_exp_value_v2(ie: IsingEnsemble,
     return 1./ ie.normalisation_constant * expectation_value * scaling_factor
 
 
-def get_that_motherfucking_mc_exp_value(ie: IsingEnsemble,
+def get_mc_exp_value(ie: IsingEnsemble,
                                         i_index: int, j_index: int = -1, burn_in_iterations: int = 200,
                                         n_MC_state_samples: int = 500, last_sample = []):
     '''
