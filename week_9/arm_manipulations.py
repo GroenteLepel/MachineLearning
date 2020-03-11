@@ -60,15 +60,19 @@ def solve(function, x_init, arm, error_range: float = 0.001):
     x_new
     :return: ndarray of shape (x_init,).
     """
-    error = 1
-    x_old = x_init
-    eta = 0.01 / 3
-    x_new = np.zeros(2 * arm.n_joints)
+    # scale the error range with n_joints
     error_range = error_range * (arm.n_joints / 3) ** 1.2
+
+    # initialise the values for solving
+    error, x_old, eta = 1, x_init, 0.01 / 3
+    x_new = np.zeros(2 * arm.n_joints)
+
+    # smoothed fixed point iteration
     while error > error_range:
         x_new = x_old * (1 - eta) + eta * function(x_old)
         error = np.abs(x_new - function(x_new)).sum()
         x_old = x_new
+
     return x_new
 
 
@@ -99,7 +103,7 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
     """
     # create array for all time iterations
     times = np.linspace(0, max_time, n_steps)
-    times[-1] -= 1e-3
+    times[-1] -= 1e-3  # to prevent nan values in final iteration
     time_step = times[1] - times[0]
 
     # initialise the init array for fixed point iteration, chosing random values
