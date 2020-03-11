@@ -37,9 +37,10 @@ class Arm:
         that one.
         :param dashed: boolean, option to make the arm dashed.
         """
+        plt.rcParams.update({'font.size': 20})
         if not plt.get_fignums():
-            size = 5
-            fig = plt.figure(figsize=(size, size))
+            size = 10
+            fig = plt.figure(figsize=(size, size / 1.5))
             ax = fig.add_subplot(1, 1, 1)
         else:
             fig = plt.gcf()
@@ -53,13 +54,27 @@ class Arm:
             x_joints[i] = x_individual[:i].sum()
             y_joints[i] = y_individual[:i].sum()
 
-        ax.grid(ls='--')
-        axes_range = - self.n_joints - 1, self.n_joints + 1
-        ax.set_xticks(np.arange(axes_range[0], axes_range[1]))
-        ax.set_yticks(np.arange(axes_range[0], axes_range[1]))
-        ax.set_xlim(axes_range)
-        ax.set_ylim(axes_range)
-        if dashed:
-            ax.plot(x_joints, y_joints, marker='o', ls='--')
+        x_axes_range = np.array([-0.5 / 3, 2.5 / 3]) * self.n_joints
+        y_axes_range = np.array([-1.5 / 3, 1 / 3]) * self.n_joints
+
+        if self.n_joints == 3:
+            x_ticks = np.linspace(x_axes_range[0], x_axes_range[1], 7)
+            y_ticks = np.linspace(y_axes_range[0], y_axes_range[1], 6)
+        elif self.n_joints == 100:
+            x_ticks = np.linspace(0, 100, 6)
+            y_ticks = np.linspace(-30, 30, 7)
+            y_axes_range = np.array([-35, 35])
         else:
-            ax.plot(x_joints, y_joints, marker='o')
+            x_ticks = np.linspace(x_axes_range[0], x_axes_range[1], 7)
+            y_ticks = np.linspace(y_axes_range[0], y_axes_range[1], 7)
+
+        ax.set_xticks(x_ticks)
+        ax.set_yticks(y_ticks)
+        ax.set_xlim(x_axes_range)
+        ax.set_ylim(y_axes_range)
+        if dashed:
+            ax.plot(x_joints, y_joints, marker='o', ls=':',
+                    mec='orange', mfc='orange', c='blue')
+        else:
+            ax.plot(x_joints, y_joints, marker='o',
+                    mec='red', mfc='red', c='blue')
