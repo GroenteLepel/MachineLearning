@@ -140,7 +140,7 @@ def move_arm(arm: Arm, move_to, max_time: float, n_steps: int):
         plt.title("t = {0:.2f}".format(t))
         filename = "t{0:.2f}".format(t).replace('.', '')
 
-        if not os.path.exist('../data/arm_move'):
+        if not os.path.exists('../data/arm_move'):
             os.mkdir('../data/arm_move')
 
         plt.savefig("../data/arm_move/{}".format(filename))
