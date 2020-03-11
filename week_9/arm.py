@@ -37,9 +37,9 @@ class Arm:
         that one.
         :param dashed: boolean, option to make the arm dashed.
         """
-        plt.rcParams.update({'font.size': 20})
+        plt.rcParams.update({'font.size': 14})
         if not plt.get_fignums():
-            size = 10
+            size = 6
             fig = plt.figure(figsize=(size, size / 1.5))
             ax = fig.add_subplot(1, 1, 1)
         else:
@@ -73,8 +73,8 @@ class Arm:
         ax.set_xlim(x_axes_range)
         ax.set_ylim(y_axes_range)
         if dashed:
-            ax.plot(x_joints, y_joints, marker='o', ls=':',
-                    mec='orange', mfc='orange', c='blue')
+            ax.plot(x_joints, y_joints, marker='v', ls=':',
+                    mec='green', mfc='green', c='blue')
         else:
             ax.plot(x_joints, y_joints, marker='o',
                     mec='red', mfc='red', c='blue')
